@@ -1,0 +1,543 @@
+/* ============================================
+   RESET & GLOBAL STYLES
+   ============================================ */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f8f9fc;
+    color: #2d3748;
+    line-height: 1.5;
+    overflow-x: hidden;
+}
+
+
+/* ============================================
+   PAGE HEADER
+   ============================================ */
+
+.page-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a202c;
+}
+
+.btn-primary {
+    background: #3182ce;
+    border: none;
+    border-radius: 6px;
+    padding: 0.4rem 1rem;
+    font-weight: 500;
+    font-size: 0.813rem;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    background: #2c5282;
+    transform: translateY(-1px);
+}
+
+
+/* ============================================
+   STAT CARDS - COMPACT
+   ============================================ */
+
+.stat-card {
+    background: white;
+    border-radius: 8px;
+    padding: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    border: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+    height: 100%;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    border-color: #cbd5e0;
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.stat-content {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: #718096;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    margin-bottom: 0.15rem;
+    line-height: 1.2;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #1a202c;
+    line-height: 1;
+}
+
+
+/* Soft Background Colors */
+
+.bg-primary-soft {
+    background: #dbeafe;
+}
+
+.bg-danger-soft {
+    background: #fee2e2;
+}
+
+.bg-warning-soft {
+    background: #fef3c7;
+}
+
+.bg-success-soft {
+    background: #d1fae5;
+}
+
+.bg-info-soft {
+    background: #dbeafe;
+}
+
+
+/* ============================================
+   TABLE CARD - COMPACT
+   ============================================ */
+
+.table-card {
+    background: white;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.table-controls {
+    padding: 0.875rem 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: #fafbfc;
+}
+
+
+/* ============================================
+   SEARCH BOX - COMPACT
+   ============================================ */
+
+.search-box {
+    position: relative;
+    max-width: 800px;
+}
+
+.search-icon {
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #a0aec0;
+    font-size: 0.75rem;
+}
+
+.search-box .form-control-sm {
+    padding-left: 2.70rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    height: 34px;
+    font-size: 0.813rem;
+}
+
+.search-box .form-control-sm:focus {
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.08);
+}
+
+
+/* ============================================
+   FORM CONTROLS - COMPACT
+   ============================================ */
+
+.form-select-sm {
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    height: 34px;
+    font-size: 0.813rem;
+    color: #4a5568;
+    padding: 0.25rem 0.75rem;
+}
+
+.form-select-sm:focus {
+    border-color: #4299e1;
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.08);
+}
+
+
+/* ============================================
+   TABLE - COMPACT
+   ============================================ */
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+.custom-table {
+    font-size: 0.813rem;
+}
+
+.custom-table thead {
+    background: #f7fafc;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.custom-table thead th {
+    padding: 0.65rem 0.875rem;
+    font-weight: 600;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    color: #718096;
+    border: none;
+    white-space: nowrap;
+}
+
+.custom-table tbody td {
+    padding: 0.65rem 0.875rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f3f5;
+    color: #4a5568;
+}
+
+.custom-table tbody tr {
+    transition: background 0.15s ease;
+}
+
+.custom-table tbody tr:hover {
+    background: #fafbfc;
+}
+
+.custom-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+
+/* ============================================
+   USER INFO - COMPACT
+   ============================================ */
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.user-name {
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 0.813rem;
+}
+
+.bg-success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+}
+
+.bg-warning {
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+}
+
+.bg-info {
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
+}
+
+.bg-purple {
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+}
+
+
+/* ============================================
+   ROLE TAGS - MINIMAL
+   ============================================ */
+
+.role-tag {
+    padding: 0.25rem 0.65rem;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 0.7rem;
+    letter-spacing: 0.2px;
+    display: inline-block;
+}
+
+.role-admin {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.role-owner {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.role-staff {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.role-client {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+
+/* ============================================
+   STATUS DOT - MINIMAL
+   ============================================ */
+
+.status-active {
+    background: #10b981;
+    box-shadow: 0 0 0 3px #d1fae5;
+}
+
+.status-inactive {
+    background: #9ca3af;
+    box-shadow: 0 0 0 3px #f3f4f6;
+}
+
+
+/* ============================================
+   ACTION BUTTONS - COMPACT
+   ============================================ */
+
+.action-buttons {
+    display: flex;
+    gap: 0.35rem;
+}
+
+.btn-action {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    color: #718096;
+    border-radius: 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 0.75rem;
+}
+
+.btn-action:hover {
+    background: #f1f3f5;
+    color: #2d3748;
+}
+
+.btn-action:hover:last-child {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+
+/* ============================================
+   CHECKBOX - COMPACT
+   ============================================ */
+
+.form-check-input {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #cbd5e0;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    background-color: #3182ce;
+    border-color: #3182ce;
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.08);
+}
+
+
+/* ============================================
+   PAGINATION - COMPACT
+   ============================================ */
+
+.table-footer {
+    padding: 0.75rem 1rem;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fafbfc;
+}
+
+.showing-entries {
+    font-size: 0.75rem;
+    color: #718096;
+    font-weight: 500;
+}
+
+.pagination {
+    gap: 0.25rem;
+}
+
+.pagination .page-link {
+    border: 1px solid #e2e8f0;
+    color: #4a5568;
+    padding: 0.35rem 0.65rem;
+    border-radius: 5px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    transition: all 0.15s ease;
+    margin: 0;
+    min-width: 32px;
+    text-align: center;
+}
+
+.pagination .page-link:hover {
+    background: #f7fafc;
+    border-color: #cbd5e0;
+}
+
+.pagination .page-item.active .page-link {
+    background: #3182ce;
+    border-color: #3182ce;
+    color: white;
+}
+
+.pagination .page-item.disabled .page-link {
+    background: #f7fafc;
+    border-color: #e2e8f0;
+    color: #cbd5e0;
+    cursor: not-allowed;
+}
+
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 992px) {
+    .stat-card {
+        padding: 0.65rem;
+    }
+    .stat-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+    }
+    .stat-value {
+        font-size: 1.35rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .page-title {
+        font-size: 1.25rem;
+    }
+    .stat-label {
+        font-size: 0.65rem;
+    }
+    .stat-value {
+        font-size: 1.25rem;
+    }
+    .custom-table thead th,
+    .custom-table tbody td {
+        padding: 0.55rem 0.65rem;
+    }
+    .table-footer {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+}
+
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.text-primary {
+    color: #3182ce !important;
+}
+
+.text-danger {
+    color: #dc2626 !important;
+}
+
+.text-warning {
+    color: #d97706 !important;
+}
+
+.text-success {
+    color: #059669 !important;
+}
+
+.text-info {
+    color: #0891b2 !important;
+}
+
+.text-muted {
+    color: #718096 !important;
+}
+
+
+/* ============================================
+   SINGLE PAGE FIT - HEIGHT OPTIMIZATION
+   ============================================ */
+
+@media (min-width: 1024px) {
+    body {
+        height: 100vh;
+        overflow: hidden;
+    }
+    .container-fluid {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+    }
+    .table-card {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+    }
+    .table-responsive {
+        flex: 1;
+        overflow-y: auto;
+    }
+    /* Custom scrollbar */
+    .table-responsive::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+    .table-responsive::-webkit-scrollbar-track {
+        background: #f1f3f5;
+    }
+    .table-responsive::-webkit-scrollbar-thumb {
+        background: #cbd5e0;
+        border-radius: 3px;
+    }
+    .table-responsive::-webkit-scrollbar-thumb:hover {
+        background: #a0aec0;
+    }
+}

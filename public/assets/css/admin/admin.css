@@ -1,0 +1,104 @@
+/* Admin shared theme (matches auth black/gray palette) */
+
+.admin-body {
+    --admin-bg: #f3f4f6;
+    --admin-surface: #ffffff;
+    --admin-surface-muted: #f9fafb;
+    --admin-border: #e5e7eb;
+    --admin-text: #111827;
+    --admin-text-muted: #6b7280;
+    --admin-primary: #111827;
+    --admin-primary-hover: #374151;
+    --admin-danger: #dc2626;
+    --admin-warning: #d97706;
+    --admin-success: #059669;
+    background: var(--admin-bg);
+    color: var(--admin-text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Make bootstrap primary match admin theme (scoped) */
+.admin-body .btn-primary {
+    background: var(--admin-primary);
+    border-color: var(--admin-primary);
+}
+.admin-body .btn-primary:hover {
+    background: var(--admin-primary-hover);
+    border-color: var(--admin-primary-hover);
+}
+.admin-body .btn-outline-primary {
+    color: var(--admin-primary);
+    border-color: var(--admin-primary);
+}
+.admin-body .btn-outline-primary:hover {
+    background: var(--admin-primary);
+    border-color: var(--admin-primary);
+}
+
+/* Cards & tables */
+.admin-body .table-card,
+.admin-body .stat-card {
+    background: var(--admin-surface);
+    border-color: var(--admin-border) !important;
+}
+.admin-body .table-controls,
+.admin-body .table-footer {
+    background: var(--admin-surface-muted);
+    border-color: var(--admin-border) !important;
+}
+
+.admin-body .page-title {
+    color: var(--admin-text);
+}
+
+/* Form focus ring */
+.admin-body .form-control:focus,
+.admin-body .form-select:focus {
+    border-color: var(--admin-primary);
+    box-shadow: 0 0 0 3px rgba(17, 24, 39, 0.10);
+}
+
+/* Pagination (Laravel links) */
+.admin-body .pagination .page-link {
+    color: var(--admin-text);
+}
+.admin-body .pagination .page-item.active .page-link {
+    background: var(--admin-primary);
+    border-color: var(--admin-primary);
+}
+
+/* Status tags baseline (pages can extend) */
+.admin-body .status-tag {
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 0.72rem;
+    letter-spacing: 0.2px;
+    display: inline-block;
+    border: 1px solid transparent;
+}
+
+.admin-body .status-tag.status-pending {
+    background: #fef3c7;
+    color: #92400e;
+    border-color: #fde68a;
+}
+.admin-body .status-tag.status-approved,
+.admin-body .status-tag.status-available {
+    background: #d1fae5;
+    color: #065f46;
+    border-color: #a7f3d0;
+}
+.admin-body .status-tag.status-rejected,
+.admin-body .status-tag.status-maintenance {
+    background: #fee2e2;
+    color: #991b1b;
+    border-color: #fecaca;
+}
+.admin-body .status-tag.status-ongoing,
+.admin-body .status-tag.status-rented {
+    background: #dbeafe;
+    color: #1e40af;
+    border-color: #bfdbfe;
+}
+

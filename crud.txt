@@ -1,0 +1,1208 @@
+🎯 Introduction
+This guide will teach you how to build a complete CRUD (Create, Read, Update, Delete) system using:
+
+Laravel (Backend)
+JavaScript (Frontend)
+SweetAlert2 (Beautiful alerts)
+Bootstrap (UI framework)
+
+What you'll learn:
+
+Form validation (client & server side)
+AJAX requests with Fetch API
+Error handling
+User feedback with SweetAlert2
+Dynamic table updates
+
+
+✅ Prerequisites
+Before starting, make sure you have:
+1. Laravel Project Setup
+bashphp artisan --version  # Should show Laravel version
+2. Database Connection
+Check .env file:
+envDB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=your_database
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
+3. Required Packages
+bashcomposer install
+npm install
+4. Files Ready
+
+✅ Migration file for users table
+✅ User Model with fillable fields
+✅ Controller file
+✅ Routes defined
+✅ Blade view file
+
+
+📁 Project Structure
+your-project/
+│
+├── app/
+│   ├── Http/Controllers/
+│   │   └── admin/user/
+│   │       └── userController.php
+│   └── Models/
+│       └── User.php
+│
+├── database/
+│   └── migrations/
+│       └── 2024_01_01_000000_create_users_table.php
+│
+├── public/
+│   ├── js/
+│   │   └── admin/user/
+│   │       ├── store.js
+│   │       ├── edit.js
+│   │       └── delete.js
+│   └── assets/css/
+│       └── admin/user/
+│           └── user.css
+│
+├── resources/views/
+│   └── admin/user/
+│       └── user.blade.php
+│
+└── routes/
+    └── web.php
+
+🆕 Step 1: CREATE Operation
+1.1 Backend Setup (Laravel)
+A. Create Migration
+bashphp artisan make:migration create_users_table
+php// database/migrations/xxxx_xx_xx_create_users_table.php
+public function up()
+{
+    Schema::create('users', function (Blueprint $table) {
+        $table->id();
+        $table->string('name', 50);
+        $table->string('email', 100)->unique();
+        $table->string('phone', 20)->nullable();
+        $table->string('password');
+        $table->enum('role', ['admin', 'owner', 'staff'])->default('staff');
+        $table->timestamps();
+    });
+}
+Run migration:
+bashphp artisan migrate
+B. Setup User Model
+php// app/Models/User.php
+namespace App\Models;
+
+use Illuminate\Foundation\Auth\User as Authenticatable;
+
+class User extends Authenticatable
+{
+    protected $fillable = [
+        'name',
+        'email',
+        'phone',
+        'password',
+        'role',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+}
+C. Create Controller
+php// app/Http/Controllers/admin/user/userController.php
+namespace App\Http\Controllers\admin\user;
+
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+
+class userController extends Controller
+{
+    // Display users page
+    public function index()
+    {
+        $users = User::latest()->get();
+        return view('admin.user.user', compact('users'));
+    }
+
+    // Store new user
+    public function store(Request $request)
+    {
+        try {
+            // Validate input
+            $validated = $request->validate([
+                'name' => 'required|string|min:2|max:50',
+                'email' => 'required|email|unique:users,email|max:100',
+                'phone' => 'nullable|string|min:9|max:20',
+                'password' => 'required|min:8|confirmed',
+                'role' => 'required|in:admin,owner,staff'
+            ]);
+
+            // Hash password
+            $validated['password'] = Hash::make($validated['password']);
+            
+            // Create user
+            $user = User::create($validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User created successfully!',
+                'user' => $user
+            ], 201);
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+}
+D. Define Routes
+php// routes/web.php
+use App\Http\Controllers\admin\user\userController;
+
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::prefix('user')->name('user.')->group(function () {
+        Route::get('/', [userController::class, 'index'])->name('index');
+        Route::post('/', [userController::class, 'store'])->name('store');
+    });
+});
+
+1.2 Frontend Setup (Blade + JavaScript)
+A. Create Blade View
+blade<!-- resources/views/admin/user/user.blade.php -->
+<x-app-layout>
+    <div class="container-fluid px-4 py-3">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="page-title mb-0">User Management</h2>
+            <button class="btn btn-primary btn-sm px-3" 
+                    data-bs-toggle="modal" 
+                    data-bs-target="#addUserModal">
+                <i class="fas fa-plus me-1"></i>Add User
+            </button>
+        </div>
+
+        <!-- Users Table -->
+        <div class="table-card">
+            <div class="table-responsive">
+                <table class="table custom-table" id="usersTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Role</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($users as $user)
+                        <tr data-user-id="{{ $user->id }}">
+                            <td>{{ $user->name }}</td>
+                            <td>{{ $user->email }}</td>
+                            <td>{{ $user->phone ?? 'N/A' }}</td>
+                            <td>
+                                <span class="role-tag role-{{ $user->role }}">
+                                    {{ ucfirst($user->role) }}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn-action" onclick="editUser({{ $user->id }})" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn-action" onclick="deleteUser({{ $user->id }})" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    @include('admin.user.modals.create')
+</x-app-layout>
+
+@push('scripts')
+<script src="{{ asset('js/admin/user/store.js') }}"></script>
+@endpush
+B. Create Modal
+blade<!-- resources/views/admin/user/modals/create.blade.php -->
+<div class="modal fade" id="addUserModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-plus me-2"></i>Add New User
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="userForm" novalidate>
+                    @csrf
+                    <div class="row g-3">
+                        <!-- Name -->
+                        <div class="col-md-6">
+                            <label for="name" class="form-label">
+                                Full Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="name" 
+                                   name="name"
+                                   placeholder="John Doe"
+                                   minlength="2"
+                                   maxlength="50"
+                                   required>
+                            <div class="invalid-feedback">
+                                Please enter a valid name (2-50 characters).
+                            </div>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">
+                                Email <span class="text-danger">*</span>
+                            </label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="email" 
+                                   name="email"
+                                   placeholder="user@example.com"
+                                   required>
+                            <div class="invalid-feedback">
+                                Please enter a valid email.
+                            </div>
+                        </div>
+
+                        <!-- Phone -->
+                        <div class="col-md-6">
+                            <label for="phone" class="form-label">Phone</label>
+                            <input type="tel" 
+                                   class="form-control" 
+                                   id="phone" 
+                                   name="phone"
+                                   placeholder="+63 912345678"
+                                   minlength="9"
+                                   maxlength="20">
+                        </div>
+
+                        <!-- Password -->
+                        <div class="col-md-6">
+                            <label for="password" class="form-label">
+                                Password <span class="text-danger">*</span>
+                            </label>
+                            <div class="input-group">
+                                <input type="password" 
+                                       class="form-control" 
+                                       id="password" 
+                                       name="password"
+                                       minlength="8"
+                                       required>
+                                <button class="btn btn-outline-secondary" 
+                                        type="button" 
+                                        id="togglePassword">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <small class="text-muted">Min 8 characters, letters & numbers</small>
+                            <div class="invalid-feedback">
+                                Password must be at least 8 characters.
+                            </div>
+                        </div>
+
+                        <!-- Confirm Password -->
+                        <div class="col-md-6">
+                            <label for="confirmPassword" class="form-label">
+                                Confirm Password <span class="text-danger">*</span>
+                            </label>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="confirmPassword" 
+                                   name="password_confirmation"
+                                   minlength="8"
+                                   required>
+                            <div class="invalid-feedback">
+                                Passwords do not match.
+                            </div>
+                        </div>
+
+                        <!-- Role -->
+                        <div class="col-md-6">
+                            <label for="role" class="form-label">
+                                Role <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="role" name="role" required>
+                                <option value="">Select a role</option>
+                                <option value="admin">Admin</option>
+                                <option value="owner">Owner</option>
+                                <option value="staff">Staff</option>
+                            </select>
+                            <div class="invalid-feedback">
+                                Please select a role.
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-primary" id="saveUserBtn">
+                    <i class="fas fa-save me-1"></i>Create User
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+C. Create JavaScript File
+javascript// public/js/admin/user/store.js
+document.addEventListener('DOMContentLoaded', function() {
+    // ===================================
+    // ELEMENT REFERENCES
+    // ===================================
+    const userForm = document.getElementById('userForm');
+    const saveUserBtn = document.getElementById('saveUserBtn');
+    const addUserModal = document.getElementById('addUserModal');
+    const togglePasswordBtn = document.getElementById('togglePassword');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirmPassword');
+
+    // Bootstrap modal instance
+    let modalInstance = bootstrap.Modal.getInstance(addUserModal) || 
+                       new bootstrap.Modal(addUserModal);
+
+    // ===================================
+    // PASSWORD VISIBILITY TOGGLE
+    // ===================================
+    if (togglePasswordBtn) {
+        togglePasswordBtn.addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        });
+    }
+
+    // ===================================
+    // REAL-TIME PASSWORD VALIDATION
+    // ===================================
+    if (passwordInput) {
+        passwordInput.addEventListener('input', function() {
+            const value = this.value;
+            const hasLetters = /[a-zA-Z]/.test(value);
+            const hasNumbers = /[0-9]/.test(value);
+            const isLongEnough = value.length >= 8;
+
+            if (isLongEnough && hasLetters && hasNumbers) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } else {
+                this.classList.remove('is-valid');
+            }
+        });
+    }
+
+    // ===================================
+    // PASSWORD CONFIRMATION MATCHING
+    // ===================================
+    if (confirmPasswordInput) {
+        confirmPasswordInput.addEventListener('input', function() {
+            if (this.value !== passwordInput.value) {
+                this.classList.add('is-invalid');
+                this.classList.remove('is-valid');
+            } else {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            }
+        });
+    }
+
+    // ===================================
+    // FORM SUBMISSION
+    // ===================================
+    if (saveUserBtn) {
+        saveUserBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+
+            // Step 1: Check HTML5 validation
+            if (!userForm.checkValidity()) {
+                userForm.classList.add('was-validated');
+                showNotification('Validation Error', 'Please fill in all required fields correctly.', 'error');
+                return;
+            }
+
+            // Step 2: Check password match
+            if (passwordInput.value !== confirmPasswordInput.value) {
+                confirmPasswordInput.classList.add('is-invalid');
+                showNotification('Validation Error', 'Passwords do not match.', 'error');
+                return;
+            }
+
+            // Step 3: Prepare data
+            const formData = new FormData(userForm);
+            const userData = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                phone: formData.get('phone'),
+                password: formData.get('password'),
+                password_confirmation: formData.get('password_confirmation'),
+                role: formData.get('role')
+            };
+
+            // Step 4: Show loading state
+            saveUserBtn.disabled = true;
+            const originalText = saveUserBtn.innerHTML;
+            saveUserBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Creating...';
+
+            try {
+                // Step 5: Get CSRF token
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                
+                if (!csrfToken) {
+                    throw new Error('CSRF token not found');
+                }
+
+                // Step 6: Send request
+                const response = await fetch('/admin/user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                const data = await response.json();
+
+                // Step 7: Handle response
+                if (response.ok && data.success) {
+                    // Success!
+                    showNotification('Success!', data.message, 'success');
+                    
+                    // Reset form
+                    userForm.reset();
+                    userForm.classList.remove('was-validated');
+                    
+                    // Close modal
+                    modalInstance.hide();
+                    
+                    // Reload page after 1.5 seconds
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    // Handle errors
+                    if (data.errors) {
+                        displayValidationErrors(data.errors);
+                    } else {
+                        showNotification('Error', data.message || 'Failed to create user', 'error');
+                    }
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Error', 'An unexpected error occurred. Please try again.', 'error');
+            } finally {
+                // Step 8: Restore button
+                saveUserBtn.disabled = false;
+                saveUserBtn.innerHTML = originalText;
+            }
+        });
+    }
+
+    // ===================================
+    // DISPLAY VALIDATION ERRORS
+    // ===================================
+    function displayValidationErrors(errors) {
+        // Clear previous errors
+        document.querySelectorAll('.is-invalid').forEach(el => {
+            el.classList.remove('is-invalid');
+        });
+
+        // Display new errors
+        for (const [field, messages] of Object.entries(errors)) {
+            const input = document.querySelector(`[name="${field}"]`);
+            if (input) {
+                input.classList.add('is-invalid');
+                
+                // Find feedback element
+                let feedback = input.parentElement.querySelector('.invalid-feedback');
+                
+                if (!feedback) {
+                    feedback = input.nextElementSibling;
+                    while (feedback && !feedback.classList.contains('invalid-feedback')) {
+                        feedback = feedback.nextElementSibling;
+                    }
+                }
+                
+                if (feedback) {
+                    feedback.textContent = messages[0];
+                    feedback.style.display = 'block';
+                }
+            }
+        }
+
+        showNotification('Validation Error', 'Please check the form and try again.', 'error');
+    }
+
+    // ===================================
+    // SWEETALERT2 NOTIFICATIONS
+    // ===================================
+    function showNotification(title, message, type) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: type === 'success' ? 'success' : 'error',
+                title: title,
+                text: message,
+                timer: type === 'success' ? 3000 : null,
+                showConfirmButton: type !== 'success',
+                confirmButtonColor: '#3182ce',
+                customClass: {
+                    popup: 'animated fadeInDown'
+                }
+            });
+        } else {
+            alert(`${title}: ${message}`);
+        }
+    }
+
+    // ===================================
+    // RESET FORM ON MODAL CLOSE
+    // ===================================
+    if (addUserModal) {
+        addUserModal.addEventListener('hidden.bs.modal', function() {
+            userForm.reset();
+            userForm.classList.remove('was-validated');
+            document.querySelectorAll('.is-invalid, .is-valid').forEach(el => {
+                el.classList.remove('is-invalid', 'is-valid');
+            });
+        });
+    }
+});
+
+📖 Step 2: READ Operation
+2.1 Backend (Already done in index method)
+The index() method already fetches all users:
+phppublic function index()
+{
+    $users = User::latest()->get();
+    return view('admin.user.user', compact('users'));
+}
+2.2 Frontend (Display in Table)
+Already implemented in the Blade view with a foreach loop displaying users in a table.
+
+✏️ Step 3: UPDATE Operation
+3.1 Backend Setup
+A. Add Controller Methods
+php// app/Http/Controllers/admin/user/userController.php
+
+// Show single user (for editing)
+public function show($id)
+{
+    try {
+        $user = User::findOrFail($id);
+        
+        return response()->json([
+            'success' => true,
+            'user' => $user
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'User not found'
+        ], 404);
+    }
+}
+
+// Update user
+public function update(Request $request, $id)
+{
+    try {
+        $user = User::findOrFail($id);
+        
+        // Validate
+        $validated = $request->validate([
+            'name' => 'required|string|min:2|max:50',
+            'email' => 'required|email|max:100|unique:users,email,' . $id,
+            'phone' => 'nullable|string|min:9|max:20',
+            'role' => 'required|in:admin,owner,staff',
+            'password' => 'nullable|min:8|confirmed'
+        ]);
+
+        // Update password if provided
+        if ($request->filled('password')) {
+            $validated['password'] = Hash::make($validated['password']);
+        } else {
+            unset($validated['password']);
+        }
+        
+        // Update user
+        $user->update($validated);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User updated successfully!',
+            'user' => $user
+        ]);
+        
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Validation failed',
+            'errors' => $e->errors()
+        ], 422);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred: ' . $e->getMessage()
+        ], 500);
+    }
+}
+B. Add Routes
+php// routes/web.php
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::prefix('user')->name('user.')->group(function () {
+        Route::get('/', [userController::class, 'index'])->name('index');
+        Route::post('/', [userController::class, 'store'])->name('store');
+        Route::get('/{id}', [userController::class, 'show'])->name('show');
+        Route::put('/{id}', [userController::class, 'update'])->name('update');
+    });
+});
+
+3.2 Frontend Setup
+A. Create Edit Modal
+blade<!-- resources/views/admin/user/modals/edit.blade.php -->
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-user-edit me-2"></i>Edit User
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm" novalidate>
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" id="editUserId" name="user_id">
+                    
+                    <div class="row g-3">
+                        <!-- Same fields as create modal -->
+                        <div class="col-md-6">
+                            <label for="editName" class="form-label">
+                                Full Name <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="editName" 
+                                   name="name"
+                                   required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="editEmail" class="form-label">
+                                Email <span class="text-danger">*</span>
+                            </label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="editEmail" 
+                                   name="email"
+                                   required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="editPhone" class="form-label">Phone</label>
+                            <input type="tel" 
+                                   class="form-control" 
+                                   id="editPhone" 
+                                   name="phone">
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="editRole" class="form-label">
+                                Role <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="editRole" name="role" required>
+                                <option value="admin">Admin</option>
+                                <option value="owner">Owner</option>
+                                <option value="staff">Staff</option>
+                            </select>
+                        </div>
+
+                        <div class="col-12">
+                            <hr>
+                            <p class="text-muted mb-2">
+                                <small>Leave password fields empty to keep current password</small>
+                            </p>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="editPassword" class="form-label">New Password</label>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="editPassword" 
+                                   name="password"
+                                   minlength="8">
+                            <small class="text-muted">Min 8 characters</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label for="editConfirmPassword" class="form-label">
+                                Confirm New Password
+                            </label>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="editConfirmPassword" 
+                                   name="password_confirmation"
+                                   minlength="8">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-primary" id="updateUserBtn">
+                    <i class="fas fa-save me-1"></i>Update User
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+B. Create Edit JavaScript
+javascript// public/js/admin/user/edit.js
+
+// ===================================
+// OPEN EDIT MODAL
+// ===================================
+async function editUser(userId) {
+    try {
+        // Show loading
+        Swal.fire({
+            title: 'Loading...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        // Fetch user data
+        const response = await fetch(`/admin/user/${userId}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+            // Close loading
+            Swal.close();
+            
+            // Populate form
+            document.getElementById('editUserId').value = data.user.id;
+            document.getElementById('editName').value = data.user.name;
+            document.getElementById('editEmail').value = data.user.email;
+            document.getElementById('editPhone').value = data.user.phone || '';
+            document.getElementById('editRole').value = data.user.role;
+            
+            // Clear password fields
+            document.getElementById('editPassword').value = '';
+            document.getElementById('editConfirmPassword').value = '';
+            
+            // Open modal
+            const editModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+            editModal.show();
+        } else {
+            Swal.fire('Error', 'Failed to load user data', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire('Error', 'An error occurred while loading user data', 'error');
+    }
+}
+
+// ===================================
+// UPDATE USER
+// ===================================
+document.addEventListener('DOMContentLoaded', function() {
+    const updateUserBtn = document.getElementById('updateUserBtn');
+    const editUserForm = document.getElementById('editUserForm');
+    const editUserModal = document.getElementById('editUserModal');
+
+    if (updateUserBtn) {
+        updateUserBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+
+            // Validate form
+            if (!editUserForm.checkValidity()) {
+                editUserForm.classList.add('was-validated');
+                Swal.fire('Validation Error', 'Please fill in all required fields.', 'error');
+                return;
+            }
+
+            // Check password match if provided
+            const password = document.getElementById('editPassword').value;
+            const confirmPassword = document.getElementById('editConfirmPassword').value;
+            
+            if (password && password !== confirmPassword) {
+                Swal.fire('Error', 'Passwords do not match', 'error');
+                return;
+            }
+
+            // Prepare data
+            const formData = new FormData(editUserForm);
+            const userId = document.getElementById('editUserId').value;
+            const userData = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                phone: formData.get('phone'),
+                role: formData.get('role')
+            };
+
+            // Add password only if provided
+            if (password) {
+                userData.password = password;
+                userData.password_confirmation = confirmPassword;
+            }
+
+            // Show loading
+            updateUserBtn.disabled = true;
+            const originalText = updateUserBtn.innerHTML;
+            updateUserBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Updating...';
+
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+                const response = await fetch(`/admin/user/${userId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    Swal.fire('Success!', data.message, 'success');
+                    
+                    // Close modal
+                    bootstrap.Modal.getInstance(editUserModal).hide();
+                    
+                    // Reload page
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    if (data.errors) {
+                        let errorMsg = Object.values(data.errors).flat().join('\n');
+                        Swal.fire('Validation Error', errorMsg, 'error');
+                    } else {
+                        Swal.fire('Error', data.message, 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire('Error', 'An unexpected error occurred', 'error');
+            } finally {
+                updateUserBtn.disabled = false;
+                updateUserBtn.innerHTML = originalText;
+            }
+        });
+    }
+});
+
+🗑️ Step 4: DELETE Operation
+4.1 Backend Setup
+A. Add Controller Method
+php// app/Http/Controllers/admin/user/userController.php
+
+public function destroy($id)
+{
+    try {
+        $user = User::findOrFail($id);
+        
+        // Prevent deleting yourself
+        if ($user->id === auth()->id()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You cannot delete your own account'
+            ], 403);
+        }
+        
+        $user->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User deleted successfully!'
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred: ' . $e->getMessage()
+        ], 500);
+    }
+}
+B. Add Route
+php// routes/web.php
+Route::delete('/{id}', [userController::class, 'destroy'])->name('destroy');
+
+4.2 Frontend Setup
+javascript// public/js/admin/user/delete.js
+
+async function deleteUser(userId) {
+    // Step 1: Show confirmation dialog
+    const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc2626',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel'
+    });
+
+    // Step 2: If user cancels, stop
+    if (!result.isConfirmed) {
+        return;
+    }
+
+    try {
+        // Step 3: Show loading
+        Swal.fire({
+            title: 'Deleting...',
+            allowOutsideClick: false,
+            didOpen: () => Swal.showLoading()
+        });
+
+        // Step 4: Get CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+        // Step 5: Send delete request
+        const response = await fetch(`/admin/user/${userId}`, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+
+        const data = await response.json();
+
+        // Step 6: Handle response
+        if (response.ok && data.success) {
+            // Success - show message
+            await Swal.fire('Deleted!', data.message, 'success');
+            
+            // Remove row from table (optional - or reload page)
+            const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+            if (row) {
+                row.remove();
+            }
+            
+            // OR reload page
+            // location.reload();
+        } else {
+            Swal.fire('Error', data.message || 'Failed to delete user', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        Swal.fire('Error', 'An unexpected error occurred', 'error');
+    }
+}
+
+🔍 Bonus: Search & Filter
+Frontend JavaScript
+javascript// public/js/admin/user/search.js
+
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.querySelector('.search-box input');
+    const roleFilter = document.querySelector('.role-filter');
+    const tableRows = document.querySelectorAll('#usersTable tbody tr');
+
+    // ===================================
+    // SEARCH FUNCTIONALITY
+    // ===================================
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function() {
+            const searchTerm = this.value.toLowerCase();
+            
+            tableRows.forEach(row => {
+                const name = row.querySelector('td:nth-child(1)').textContent.toLowerCase();
+                const email = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                const phone = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+                
+                const matches = name.includes(searchTerm) || 
+                               email.includes(searchTerm) || 
+                               phone.includes(searchTerm);
+                
+                row.style.display = matches ? '' : 'none';
+            });
+            
+            updateResultsCount();
+        });
+    }
+
+    // ===================================
+    // ROLE FILTER
+    // ===================================
+    if (roleFilter) {
+        roleFilter.addEventListener('change', function() {
+            const selectedRole = this.value.toLowerCase();
+            
+            tableRows.forEach(row => {
+                const role = row.querySelector('.role-tag').textContent.toLowerCase();
+                
+                if (selectedRole === '' || selectedRole === 'all roles') {
+                    row.style.display = '';
+                } else {
+                    row.style.display = role === selectedRole ? '' : 'none';
+                }
+            });
+            
+            updateResultsCount();
+        });
+    }
+
+    // ===================================
+    // UPDATE RESULTS COUNT
+    // ===================================
+    function updateResultsCount() {
+        const visibleRows = Array.from(tableRows).filter(row => row.style.display !== 'none');
+        const countElement = document.querySelector('.showing-entries');
+        
+        if (countElement) {
+            countElement.textContent = `Showing ${visibleRows.length} of ${tableRows.length}`;
+        }
+    }
+});
+
+✨ Best Practices
+1. Security
+
+✅ Always validate on both client and server
+✅ Use CSRF tokens for all mutations
+✅ Hash passwords before storing
+✅ Sanitize user inputs
+✅ Use HTTPS in production
+
+2. User Experience
+
+✅ Show loading states during operations
+✅ Provide clear success/error messages
+✅ Disable buttons during processing
+✅ Validate forms in real-time
+✅ Confirm destructive actions
+
+3. Code Organization
+
+✅ Separate concerns (routes, controllers, views)
+✅ Use meaningful variable names
+✅ Comment complex logic
+✅ Keep functions small and focused
+✅ Follow naming conventions
+
+4. Error Handling
+
+✅ Always use try-catch blocks
+✅ Log errors for debugging
+✅ Show user-friendly error messages
+✅ Validate data before processing
+✅ Handle edge cases
+
+5. Performance
+
+✅ Use pagination for large datasets
+✅ Implement search/filter on backend for large data
+✅ Cache frequently accessed data
+✅ Optimize database queries
+✅ Minimize DOM manipulations
+
+
+🔧 Troubleshooting
+Problem 1: CSRF Token Missing
+Error: CSRF token mismatch
+Solution:
+html<!-- Add to layout head -->
+<meta name="csrf-token" content="{{ csrf_token() }}">
+
+Problem 2: Route Not Found (404)
+Error: 404 Not Found
+Solution:
+bash# Clear route cache
+php artisan route:clear
+php artisan route:cache
+
+# Check routes
+php artisan route:list
+
+Problem 3: Validation Failing
+Error: Form won't submit
+Solution:
+javascript// Debug validation
+const invalidFields = form.querySelectorAll(':invalid');
+console.log('Invalid fields:', invalidFields);
+invalidFields.forEach(field => {
+    console.log(field.name, field.validationMessage);
+});
+
+Problem 4: SweetAlert Not Working
+Error: Swal is not defined
+Solution:
+html<!-- Add BEFORE your custom scripts -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+Problem 5: Modal Won't Open
+Error: Modal doesn't appear
+Solution:
+javascript// Check if Bootstrap is loaded
+if (typeof bootstrap === 'undefined') {
+    console.error('Bootstrap not loaded!');
+}
+
+// Check if modal element exists
+const modal = document.getElementById('addUserModal');
+if (!modal) {
+    console.error('Modal element not found!');
+}
+
+📝 Complete File Checklist
+Before deploying, make sure you have:
+
+✅ Migration file created and run
+✅ User model with fillable fields
+✅ Controller with all CRUD methods
+✅ Routes defined for all operations
+✅ Blade view with table and modals
+✅ JavaScript files for each operation
+✅ CSS file for styling
+✅ CSRF token meta tag in layout
+✅ SweetAlert2 CDN included
+✅ Bootstrap JS included

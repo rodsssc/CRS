@@ -1,0 +1,23 @@
+.status-tag {
+    padding: 0.25rem 0.65rem;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 0.7rem;
+    letter-spacing: 0.2px;
+    display: inline-block;
+}
+
+.status-maintenance {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-rented {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.status-available {
+    background: #d1fae5;
+    color: #065f46;
+}

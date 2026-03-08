@@ -1,0 +1,376 @@
+/* app.css - COMPLETE FILE */
+
+:root {
+    --sidebar-width: 260px;
+    --color-sidebar: #111827;
+    --color-sidebar-foreground: #ffffff;
+    --color-sidebar-border: #333333;
+    --client-header-height: 70px;
+}
+
+body {
+    min-height: 100vh;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+.client-main {
+    margin-top: var(--client-header-height);
+    padding: 2rem;
+    min-height: calc(100vh - var(--client-header-height));
+    background: #f8f9fa;
+}
+
+.client-main.landing-main {
+    padding: 0;
+    background: #ffffff;
+}
+
+
+/* ================================
+   ADMIN SIDEBAR STYLES
+   ================================ */
+
+.sidebar-container {
+    width: var(--sidebar-width);
+    height: 100vh;
+    position: fixed;
+    left: 0;
+    top: 0;
+    background: var(--color-sidebar);
+    color: var(--color-sidebar-foreground);
+    border-right: 1px solid var(--color-sidebar-border);
+    z-index: 1000;
+    transition: transform 0.3s ease;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebar-nav-wrapper {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.sidebar-brand {
+    padding: 1.5rem 1.25rem;
+    border-bottom: 1px solid var(--color-sidebar-border);
+    flex-shrink: 0;
+}
+
+.sidebar-brand a {
+    color: white;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-weight: 600;
+    font-size: 1.125rem;
+}
+
+.sidebar-section {
+    padding: 1rem;
+    flex-shrink: 0;
+}
+
+.sidebar-section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #52525b;
+    margin-bottom: 0.5rem;
+    padding-left: 1rem;
+}
+
+.sidebar-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-nav-item {
+    margin-bottom: 0.25rem;
+}
+
+.nav-link-minimal {
+    color: #a1a1aa;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    cursor: pointer;
+}
+
+.nav-link-minimal:hover,
+.nav-link-minimal.active {
+    color: white;
+    background-color: #1a1a1a;
+}
+
+.sidebar-footer {
+    padding: 1rem;
+    border-top: 1px solid var(--color-sidebar-border);
+    margin-top: auto;
+    flex-shrink: 0;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.user-profile:hover {
+    background: #1a1a1a;
+}
+
+.user-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.user-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.user-name {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-email {
+    font-size: 0.75rem;
+    color: #888888;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+/* Mobile Toggle Button */
+
+.mobile-menu-toggle {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 1001;
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+    display: none;
+    border: none;
+    cursor: pointer;
+    background: var(--color-sidebar);
+    color: white;
+}
+
+
+/* Sidebar Overlay */
+
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    cursor: pointer;
+}
+
+
+/* ================================
+   CLIENT NAVIGATION STYLES
+   ================================ */
+
+.client-nav {
+    height: var(--client-header-height);
+    background: white;
+    border-bottom: 1px solid #eaeaea;
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+}
+
+.client-nav .container {
+    height: 100%;
+}
+
+
+/* ================================
+   MAIN CONTENT AREAS
+   ================================ */
+
+
+/* Admin Layout */
+
+.admin-main {
+    margin-left: var(--sidebar-width);
+    padding: 2rem;
+    min-height: 100vh;
+    transition: margin-left 0.3s ease;
+    background: #f8f9fa;
+}
+
+
+/* ================================
+   MOBILE RESPONSIVE
+   ================================ */
+
+@media (max-width: 991.98px) {
+    /* Admin Sidebar Mobile */
+    .sidebar-container {
+        transform: translateX(-100%);
+    }
+    .sidebar-container.show {
+        transform: translateX(0);
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+    }
+    .sidebar-container.show~.sidebar-overlay {
+        display: block;
+    }
+    .mobile-menu-toggle {
+        display: block;
+    }
+    .admin-main {
+        margin-left: 0;
+        padding-top: 1rem;
+    }
+}
+
+
+/* ================================
+   DROPDOWN STYLES (for both admin and client)
+   ================================ */
+
+.dropdown-menu {
+    z-index: 1050 !important;
+}
+
+.dropdown-menu-dark {
+    background-color: #1a1a1a;
+    border: 1px solid #333;
+}
+
+.dropdown-menu-dark .dropdown-item {
+    color: #e0e0e0;
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+.dropdown-menu-dark .dropdown-item:hover {
+    background-color: #2a2a2a;
+    color: white;
+}
+
+
+/* ================================
+   SCROLLBAR STYLING
+   ================================ */
+
+.sidebar-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar-container::-webkit-scrollbar-thumb {
+    background: #444;
+    border-radius: 3px;
+}
+
+.sidebar-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+
+/* ================================
+   UTILITY CLASSES
+   ================================ */
+
+.hover-dark:hover {
+    color: #000 !important;
+}
+
+.text-secondary {
+    color: #6c757d !important;
+}
+
+.shadow-sm {
+    box-shadow: 0 .125rem .25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+
+/* ================================
+   PAGE TRANSITIONS
+   ================================ */
+
+.page {
+    animation: fadeIn 0.9s ease forwards;
+}
+
+.fade-out {
+    animation: fadeOut 0.9s ease forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+}
+
+.btn-bg-color {
+    background-color: black;
+    color: white;
+}
+
+.bg-header {
+    background-color: #000000;
+    color: white;
+}
+
+.bg-gradient {
+    background-color: #4D2FB2;
+}
+
+.client-header-logo {
+    height: 60px;
+    border-radius: 30px;
+    border: 3px solid #ffffff;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}

@@ -1,0 +1,67 @@
+/* Filter Bar */
+
+.filter-bar {
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+
+/* Search input group */
+
+.filter-bar .input-group {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.filter-bar .input-group-text {
+    border: none;
+    background: #fff;
+}
+
+.filter-bar .form-control {
+    border: none;
+    outline: none;
+    box-shadow: none;
+}
+
+.filter-bar .form-control:focus {
+    box-shadow: none;
+}
+
+.filter-bar .form-select {
+    border-color: #d1d5db;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+
+/* Seater Cards */
+
+.seater-card {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 14px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 20px;
+    background: #f9fafb;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: #374151;
+    transition: all 0.18s ease;
+    /* user-select: none; */
+}
+
+.seater-card:hover {
+    border-color: #374151;
+    background: #f3f4f6;
+}
+
+.btn-check:checked+.seater-card {
+    border-color: #111827;
+    background: #111827;
+    color: #ffffff;
+}

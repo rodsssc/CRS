@@ -1,0 +1,416 @@
+/* ============================================
+   VERIFICATION FORM - COMPLETE STYLES
+   ============================================ */
+
+
+/* CSS Variables */
+
+:root {
+    --primary-color: #0d6efd;
+    --success-color: #198754;
+    --border-radius: 0.5rem;
+}
+
+
+/* ============================================
+   LAYOUT & CONTAINER
+   ============================================ */
+
+.verification-container {
+    background: #f8f9fa;
+    padding: 2rem 0;
+    min-height: auto;
+    width: 100%;
+    overflow: visible !important;
+    /* ✅ This is correct */
+}
+
+
+/* Remove any height constraints from parent layouts */
+
+.client-main {
+    min-height: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    /* ✅ This says visible, but... */
+}
+
+
+/* ============================================
+   PROGRESS INDICATOR
+   ============================================ */
+
+.step-indicator {
+    flex: 1;
+    opacity: 0.5;
+    transition: opacity 0.3s;
+}
+
+.step-indicator.active {
+    opacity: 1;
+}
+
+.step-indicator.completed {
+    opacity: 1;
+}
+
+.step-number {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #e9ecef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.3s;
+}
+
+.step-indicator.active .step-number {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.2);
+}
+
+.step-indicator.completed .step-number {
+    background: var(--success-color);
+    color: white;
+}
+
+.progress-connector {
+    flex: 1;
+    height: 2px;
+    background: #dee2e6;
+    margin: 0 1rem;
+}
+
+
+/* ============================================
+   ICON CIRCLE
+   ============================================ */
+
+.icon-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* ============================================
+   CARD
+   ============================================ */
+
+.card {
+    border-radius: 0.75rem;
+    min-height: auto !important;
+    overflow: visible !important;
+    /* ✅ This is correct */
+}
+
+
+/* ============================================
+   FORM ELEMENTS - COMPACT SIZING
+   ============================================ */
+
+.form-label-sm {
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.form-control-sm,
+.form-select-sm {
+    font-size: 0.875rem;
+    padding: 0.375rem 0.5rem;
+}
+
+
+/* ============================================
+   INPUT GROUPS
+   ============================================ */
+
+.input-group-text {
+    background-color: #f8f9fa;
+    border-right: none;
+}
+
+.input-group .form-control,
+.input-group .form-select {
+    border-left: none;
+}
+
+.input-group:focus-within .input-group-text {
+    border-color: #86b7fe;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+}
+
+
+/* ============================================
+   UPLOAD AREAS - COMPACT
+   ============================================ */
+
+.upload-area-compact {
+    position: relative;
+    border: 2px dashed #dee2e6;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    min-height: 140px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8f9fa;
+}
+
+.upload-area-compact:hover {
+    border-color: #0d6efd;
+    background: #e7f1ff;
+}
+
+.upload-area-compact.drag-over {
+    border-color: var(--primary-color);
+    background: #e7f3ff;
+}
+
+.upload-label-compact {
+    cursor: pointer;
+    width: 100%;
+    margin: 0;
+}
+
+.upload-area-compact .preview-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 0.5rem;
+}
+
+.upload-area-compact .preview-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 0.375rem;
+}
+
+.upload-area-compact .remove-image {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    z-index: 10;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+
+/* ============================================
+   LEGACY UPLOAD AREAS (for backward compatibility)
+   ============================================ */
+
+.upload-area {
+    border: 2px dashed #dee2e6;
+    border-radius: var(--border-radius);
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s;
+    position: relative;
+    min-height: 200px;
+    background: #f8f9fa;
+}
+
+.upload-area-large {
+    min-height: 250px;
+}
+
+.upload-area:hover {
+    border-color: var(--primary-color);
+    background: #f0f7ff;
+}
+
+.upload-area.drag-over {
+    border-color: var(--primary-color);
+    background: #e7f3ff;
+}
+
+.upload-label {
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.preview-container {
+    position: relative;
+}
+
+.preview-container img {
+    max-height: 200px;
+    object-fit: contain;
+}
+
+.remove-image {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+
+/* ============================================
+   TAB CONTENT
+   ============================================ */
+
+.tab-content {
+    overflow: visible !important;
+}
+
+#profiling,
+#verification {
+    overflow: visible !important;
+}
+
+
+/* Ensure forms can expand */
+
+#profilingForm,
+#verificationForm {
+    min-height: auto !important;
+    overflow: visible !important;
+}
+
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+.btn-lg {
+    padding: 0.75rem 1.5rem;
+}
+
+
+/* ============================================
+   MODAL
+   ============================================ */
+
+.modal-backdrop {
+    z-index: 1040 !important;
+}
+
+.modal {
+    z-index: 1050 !important;
+}
+
+
+/* Animation for success modal */
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0);
+    }
+    to {
+        transform: scale(1);
+    }
+}
+
+.success-checkmark i {
+    animation: scaleIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+
+/* Fade out animation */
+
+.fade-out {
+    animation: fadeOut 0.8s forwards;
+}
+
+@keyframes fadeOut {
+    to {
+        opacity: 0;
+    }
+}
+
+
+/* ============================================
+   BOOTSTRAP OVERRIDES
+   ============================================ */
+
+
+/* Override any Bootstrap restrictions */
+
+.row,
+.col,
+.col-md-6,
+.col-md-12,
+.col-lg-8,
+.col-xl-10 {
+    max-width: 100% !important;
+    min-height: auto !important;
+}
+
+
+/* ============================================
+   RESPONSIVE - MOBILE
+   ============================================ */
+
+@media (max-width: 768px) {
+    /* Container */
+    .verification-container {
+        padding: 1rem 0;
+    }
+    /* Step indicator */
+    .step-indicator span {
+        font-size: 0.875rem;
+    }
+    .step-number {
+        width: 35px;
+        height: 35px;
+        font-size: 0.875rem;
+    }
+    /* Icon circle */
+    .icon-circle {
+        width: 48px;
+        height: 48px;
+    }
+    /* Upload areas */
+    .upload-area {
+        padding: 1.5rem;
+        min-height: 180px;
+    }
+    .upload-area-compact {
+        min-height: 120px;
+        padding: 0.75rem;
+    }
+    /* Mobile responsiveness */
+    .container-fluid,
+    .row,
+    .col-12 {
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+    }
+    .card-body {
+        padding: 1.5rem !important;
+    }
+    .upload-area,
+    .upload-area-large {
+        min-height: 150px !important;
+        padding: 1rem !important;
+    }
+}
