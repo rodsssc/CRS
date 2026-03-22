@@ -14,11 +14,6 @@ use App\Http\Controllers\client\booking\bookingController as clientBookingContro
 use App\Http\Controllers\client\car\carController as clientCarController;
 use App\Http\Controllers\client\profile\clientProfileController;
 use App\Http\Controllers\client\verification\verificationController as clientVerificationController;
-use App\Models\Rental;
-
-
-// use App\Http\Controllers\ProfileController;
-
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -27,21 +22,10 @@ use Illuminate\Support\Facades\Route;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', function () {
-    return view('client.home');
-})->name('home');
-
-// Public JSON endpoint used by the landing page to load cars dynamically
-Route::get('/get-cars', [CarDataController::class, 'index'])->name('public.cars.index');
-
-/*
-|--------------------------------------------------------------------------
-| Guest Routes (Redirected if authenticated)
-|--------------------------------------------------------------------------
-*/
-
-Route::middleware('guest')->group(function () {
-    // Auth routes are included from auth.php
+Route::get('/', fn () => view('client.home'))->name('home');
+Route::prefix('get-cars')->name('public.cars.')->group(function () {
+    Route::get('/',      [CarDataController::class, 'index'])->name('index');
+    Route::get('/stats', [CarDataController::class, 'stats'])->name('stats');
 });
 
 /*
@@ -51,214 +35,154 @@ Route::middleware('guest')->group(function () {
 */
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    
+
     /*
     |--------------------------------------------------------------------------
     | Client Routes
     |--------------------------------------------------------------------------
     */
-    
-    Route::middleware(['role:client'])->prefix('client')->name('client.')->group(function () {
-        
-        /*
-        |----------------------------------------------------------------------
-        | Public Client Routes (No Verification Required)
-        |----------------------------------------------------------------------
-        */
-        
-        // Home Page
-        Route::get('/home', function () {
-            return view('client.home');
-        })->name('home');
 
-          Route::prefix('verification')->name('verification.')->group(function () {
-            // Verification Routes
-            Route::get('/', [clientVerificationController::class, 'index'])->name('index');
-            Route::post('/verification', [clientVerificationController::class, 'store'])->name('verification.store');
-            
-            // Profile Routes
-            Route::get('/profile/{id}', [clientProfileController::class, 'show'])->name('profile.show');
-            Route::post('/profile', [clientProfileController::class, 'store'])->name('profile.store');
-            Route::put('/profile/{id}', [clientProfileController::class, 'update'])->name('profile.update');
+    Route::middleware(['role:client'])->prefix('client')->name('client.')->group(function () {
+
+        Route::get('/home', fn () => view('client.home'))->name('home');
+
+        Route::prefix('verification')->name('verification.')->group(function () {
+            Route::get('/',             [clientVerificationController::class, 'index']) ->name('index');
+            Route::post('/verification',[clientVerificationController::class, 'store']) ->name('verification.store');
+            Route::get('/profile/{id}', [clientProfileController::class,      'show'])  ->name('profile.show');
+            Route::post('/profile',     [clientProfileController::class,      'store']) ->name('profile.store');
+            Route::put('/profile/{id}', [clientProfileController::class,      'update'])->name('profile.update');
         });
-      
-        /*
-        |----------------------------------------------------------------------
-        | Protected Client Routes (Verification Required)
-        |----------------------------------------------------------------------
-        */
-        
+
         Route::middleware('verified.client')->group(function () {
 
-                Route::prefix('bookings')->name('bookings.')->group(function () {
-                    Route::get('/', [clientBookingController::class, 'index'])->name('index');
-                    Route::get('/data', [clientBookingController::class, 'list'])->name('data');
-                    Route::post('/', [clientBookingController::class, 'store'])->name('store');
-                    Route::get('/{booking}/payment', [clientBookingController::class, 'payment'])->name('payment');
-                    Route::post('/{booking}/payment', [clientBookingController::class, 'storePayment'])->name('payment.store');
-                });
-                
-               
-                Route::prefix('car')->name('car.')->group(function () {
-                    Route::get('/', [clientCarController::class, 'index'])->name('index');
-                    Route::get('/{id}', [clientCarController::class, 'show'])->name('show');
-                    // Add show route later
-                    
-                });
-                
-                // Contact
-                Route::get('/contact', function () {
-                    return view('client.contact');
-                })->name('contact');
+            Route::prefix('bookings')->name('bookings.')->group(function () {
+                Route::get('/',                   [clientBookingController::class, 'index'])       ->name('index');
+                Route::get('/data',               [clientBookingController::class, 'list'])        ->name('data');
+                Route::post('/',                  [clientBookingController::class, 'store'])       ->name('store');
+                Route::get('/{booking}/payment',  [clientBookingController::class, 'payment'])     ->name('payment');
+                Route::post('/{booking}/payment', [clientBookingController::class, 'storePayment'])->name('payment.store');
             });
 
-            Route::prefix('rentals')->name('rentals.')->group(function () {
-            // Route::post('/', [RentalController::class, 'store'])->name('store');
-            // Route::get('/', [RentalController::class, 'index'])->name('index');
-            // Route::get('/{id}', [RentalController::class, 'show'])->name('show');
+            Route::prefix('car')->name('car.')->group(function () {
+                Route::get('/',     [clientCarController::class, 'index'])->name('index');
+                Route::get('/data', [clientCarController::class, 'data']) ->name('data');
+                Route::get('/{id}', [clientCarController::class, 'show']) ->name('show');
             });
+
+            Route::get('/contact', fn () => view('client.contact'))->name('contact');
+        });
     });
-    
+
     /*
     |--------------------------------------------------------------------------
-    | Admin Routes (Admin, Staff, Owner) - READ ONLY
+    | Shared Admin Routes — dashboard + read-only views (admin, staff, owner)
     |--------------------------------------------------------------------------
     */
-    
+
     Route::middleware(['role:admin,staff,owner'])->prefix('admin')->name('admin.')->group(function () {
-        
-        // Dashboard - Accessible by admin, staff, owner
+
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-        Route::get('/dashboard/revenue-data', [DashboardController::class, 'revenueData'])->name('dashboard.revenue-data');
-        
-        // Car Management - VIEW ONLY  staff
-        // Route::prefix('cars')->name('cars.')->group(function () {
-        //     Route::get('/',[carController:: class ,'index'])->name('index');
-        // });
-        
-        // Booking Management - Accessible by admin, staff, owner
-        Route::prefix('bookings')->name('bookings.')->group(function () {
-           
-        });
-        
-        // Client Verification Management - Accessible by admin, staff, owner
-        Route::prefix('verification')->name('verification.')->group(function () {
-           
-        });
-        
-        // Reports - Accessible by admin, staff, owner
+
+        // Reports
         Route::prefix('reports')->name('reports.')->group(function () {
-            Route::get('/sales', [ReportController::class, 'sales'])->name('sales');
+            Route::get('/sales',       [ReportController::class, 'sales'])      ->name('sales');
             Route::get('/commissions', [ReportController::class, 'commissions'])->name('commissions');
         });
-    });
-    
-    /*
-    |--------------------------------------------------------------------------
-    | Owner Only Routes - Car CRUD Operations
-    |--------------------------------------------------------------------------
-    */
 
-    /*
-    |--------------------------------------------------------------------------
-    | Admin Only Routes
-    |--------------------------------------------------------------------------
-    */
-    
-    Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
-        
-        // User Management - ADMIN ONLY
-        Route::prefix('user')->name('user.')->group(function () {
-            Route::get('/',[userController:: class ,'index'])->name('index');
-            Route::post('/',[userController:: class ,'store'])->name('store');
-            Route::get('/{id}',[userController:: class ,'show'])->name('show');
-            Route::get('/{id}/edit',[userController:: class ,'edit'])->name('edit');
-            Route::put('/{id}',[userController:: class ,'update'])->name('update');
-            Route::delete('/{id}',[userController:: class ,'destroy'])->name('destroy');
+        // Bookings — /pending MUST come before /{id} to avoid wildcard conflict
+        Route::prefix('bookings')->name('bookings.')->group(function () {
+            Route::get('/',        [adminBookingController::class, 'index'])        ->name('index');
+            Route::get('/pending', [adminBookingController::class, 'pendingCount']) ->name('pending');
+            Route::get('/{id}',    [adminBookingController::class, 'show'])         ->name('show');
         });
 
-        Route::prefix('cars')->name('cars.')->group(function () {
-            Route::get('/',[adminCarController:: class ,'index'])->name('index');
-             Route::get('/{id}/edit',[adminCarController:: class ,'edit'])->name('edit');
-            Route::get('/{id}',[adminCarController:: class ,'show'])->name('show');
-           
-            Route::put('/{id}',[adminCarController:: class ,'update'])->name('update');
-            Route::post('/',[adminCarController:: class ,'store'])->name('store');
-            Route::delete('/{id}',[adminCarController:: class ,'destroy'])->name('destroy');
-        });
-
-        Route::prefix('maintenance')->name('maintenance.')->group(function () {
-            Route::get('/', [MaintenanceController::class, 'index'])->name('index');
-            Route::post('/', [MaintenanceController::class, 'store'])->name('store');
-            Route::get('/{id}', [MaintenanceController::class, 'show'])->name('show');
-            Route::get('/{id}/edit', [MaintenanceController::class, 'edit'])->name('edit');
-            Route::put('/{id}', [MaintenanceController::class, 'update'])->name('update');
-            Route::post('/{id}/complete', [MaintenanceController::class, 'markComplete'])->name('complete');
-            Route::delete('/{id}', [MaintenanceController::class, 'destroy'])->name('destroy');
-        });
-
-        // Payment Management - ADMIN ONLY
-        Route::prefix('payment')->name('payment.')->group(function () {
-            Route::get('/', [PaymentController::class, 'index'])->name('index');
-            Route::post('/', [PaymentController::class, 'store'])->name('store');
-            Route::post('/{id}/complete', [PaymentController::class, 'markCompleted'])->name('markCompleted');
-            Route::post('/{id}/failed', [PaymentController::class, 'markFailed'])->name('markFailed');
-            Route::delete('/{id}', [PaymentController::class, 'destroy'])->name('destroy');
-        });
-        
-        // System Settings - ADMIN ONLY
+        // Verification
         Route::prefix('verification')->name('verification.')->group(function () {
-            Route::get('/', [adminVerificationController::class, 'index'])->name('index');
-            Route::get('/{id}', [adminVerificationController::class, 'show'])->name('show');
-            Route::post('/{id}/approve', [adminVerificationController::class, 'approve'])->name('approve');
-            Route::post('/{id}/reject', [adminVerificationController::class, 'reject'])->name('reject');
-            
-        });
-
-
-         Route::prefix('bookings')->name('bookings.')->group(function () {
-            Route::get('/', [adminBookingController::class, 'index'])->name('index');
-            Route::get('/{id}', [adminBookingController::class, 'show'])->name('show');
-            Route::put('/{id}/approve', [adminBookingController::class, 'approve'])->name('approve');
-            Route::put('/{id}/complete', [adminBookingController::class, 'complete'])->name('complete');
-        });
-        
-        // Sales Reports - ADMIN ONLY
-        Route::prefix('sales-reports')->name('sales.')->group(function () {
-            Route::get('/', [SalesReportController::class, 'index'])->name('index');
-            Route::get('/analytics', [SalesReportController::class, 'analytics'])->name('analytics');
-            Route::post('/', [SalesReportController::class, 'store'])->name('store');
-            Route::get('/{report}', [SalesReportController::class, 'show'])->name('show');
-            Route::put('/{report}', [SalesReportController::class, 'update'])->name('update');
-            Route::delete('/{report}', [SalesReportController::class, 'destroy'])->name('destroy');
-            Route::post('/bulk-generate', [SalesReportController::class, 'bulkGenerate'])->name('bulk-generate');
-            Route::get('/export/csv', [SalesReportController::class, 'exportCsv'])->name('export.csv');
-        });
-
-        // Commissions - ADMIN ONLY
-        Route::prefix('commissions')->name('commissions.')->group(function () {
-            Route::get('/', [CommissionController::class, 'index'])->name('index');
-            Route::get('/analytics', [CommissionController::class, 'analytics'])->name('analytics');
-            Route::get('/my-summary', [CommissionController::class, 'mySummary'])->name('my-summary');
-            Route::post('/', [CommissionController::class, 'store'])->name('store');
-            Route::post('/bulk-mark-paid', [CommissionController::class, 'bulkMarkPaid'])->name('bulk-mark-paid');
-            Route::put('/{commission}/mark-paid', [CommissionController::class, 'markAsPaid'])->name('mark-paid');
-            Route::put('/{commission}/mark-earned', [CommissionController::class, 'markAsEarned'])->name('mark-earned');
+            Route::get('/',        [adminVerificationController::class, 'index'])        ->name('index');
+            Route::get('/pending', [adminVerificationController::class, 'pendingCount']) ->name('pending');
+            Route::get('/{id}',    [adminVerificationController::class, 'show'])         ->name('show');
         });
     });
-    
+
     /*
     |--------------------------------------------------------------------------
-    | Shared Authenticated Routes (All Users)
+    | Admin-Only Routes — full write access
     |--------------------------------------------------------------------------
     */
-    
-    // Route::prefix('profile')->name('profile.')->group(function () {
-    //     Route::get('/', [ProfileController::class, 'edit'])->name('edit');
-    //     Route::patch('/', [ProfileController::class, 'update'])->name('update');
-    //     Route::delete('/', [ProfileController::class, 'destroy'])->name('destroy');
-    // });
-});
+
+    Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
+
+        Route::get('/dashboard/revenue-data', [DashboardController::class, 'revenueData'])->name('dashboard.revenue-data');
+
+        // ── Users ────────────────────────────────────────────────────────────
+        Route::prefix('user')->name('user.')->group(function () {
+            Route::get('/',          [userController::class, 'index'])  ->name('index');
+            Route::post('/',         [userController::class, 'store'])  ->name('store');
+            Route::get('/{id}',      [userController::class, 'show'])   ->name('show');
+            Route::get('/{id}/edit', [userController::class, 'edit'])   ->name('edit');
+            Route::put('/{id}',      [userController::class, 'update']) ->name('update');
+            Route::delete('/{id}',   [userController::class, 'destroy'])->name('destroy');
+        });
+
+        // ── Cars ─────────────────────────────────────────────────────────────
+        Route::prefix('cars')->name('cars.')->group(function () {
+            Route::get('/',          [adminCarController::class, 'index'])  ->name('index');
+            Route::post('/',         [adminCarController::class, 'store'])  ->name('store');
+            Route::get('/{id}',      [adminCarController::class, 'show'])   ->name('show');
+            Route::get('/{id}/edit', [adminCarController::class, 'edit'])   ->name('edit');
+            Route::put('/{id}',      [adminCarController::class, 'update']) ->name('update');
+            Route::delete('/{id}',   [adminCarController::class, 'destroy'])->name('destroy');
+        });
+
+        // ── Maintenance ──────────────────────────────────────────────────────
+        Route::prefix('maintenance')->name('maintenance.')->group(function () {
+            Route::get('/',               [MaintenanceController::class, 'index'])       ->name('index');
+            Route::post('/',              [MaintenanceController::class, 'store'])       ->name('store');
+            Route::get('/{id}',           [MaintenanceController::class, 'show'])        ->name('show');
+            Route::get('/{id}/edit',      [MaintenanceController::class, 'edit'])        ->name('edit');
+            Route::put('/{id}',           [MaintenanceController::class, 'update'])      ->name('update');
+            Route::post('/{id}/complete', [MaintenanceController::class, 'markComplete'])->name('complete');
+            Route::delete('/{id}',        [MaintenanceController::class, 'destroy'])     ->name('destroy');
+        });
+
+        // ── Payments ─────────────────────────────────────────────────────────
+        Route::prefix('payment')->name('payment.')->group(function () {
+            Route::get('/',               [PaymentController::class, 'index'])        ->name('index');
+            Route::post('/',              [PaymentController::class, 'store'])        ->name('store');
+            Route::post('/{id}/complete', [PaymentController::class, 'markCompleted'])->name('markCompleted');
+            Route::post('/{id}/failed',   [PaymentController::class, 'markFailed'])  ->name('markFailed');
+            Route::delete('/{id}',        [PaymentController::class, 'destroy'])     ->name('destroy');
+        });
+
+        // ── Verification actions ──────────────────────────────────────────────
+        Route::prefix('verification')->name('verification.')->group(function () {
+            Route::post('/{id}/approve', [adminVerificationController::class, 'approve'])->name('approve');
+            Route::post('/{id}/reject',  [adminVerificationController::class, 'reject']) ->name('reject');
+        });
+
+        // ── Booking actions ───────────────────────────────────────────────────
+        Route::prefix('bookings')->name('bookings.')->group(function () {
+            Route::put('/{id}/approve',  [adminBookingController::class, 'approve']) ->name('approve');
+            Route::put('/{id}/complete', [adminBookingController::class, 'complete'])->name('complete');
+            Route::put('/{id}/reject',   [adminBookingController::class, 'reject'])  ->name('reject');
+        });
+
+        // ── Sales Reports ─────────────────────────────────────────────────────
+        Route::prefix('sales-reports')->name('sales.')->group(function () {
+            Route::get('/',               [SalesReportController::class, 'index'])       ->name('index');
+            Route::get('/analytics',      [SalesReportController::class, 'analytics'])   ->name('analytics');
+            Route::post('/',              [SalesReportController::class, 'store'])        ->name('store');
+            Route::get('/{report}',       [SalesReportController::class, 'show'])         ->name('show');
+            Route::put('/{report}',       [SalesReportController::class, 'update'])       ->name('update');
+            Route::delete('/{report}',    [SalesReportController::class, 'destroy'])      ->name('destroy');
+            Route::post('/bulk-generate', [SalesReportController::class, 'bulkGenerate'])->name('bulk-generate');
+            Route::get('/export/csv',     [SalesReportController::class, 'exportCsv'])   ->name('export.csv');
+        });
+
+    });
+
+}); 
 
 /*
 |--------------------------------------------------------------------------

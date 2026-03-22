@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>Bj Car Rental</title>
     
     <!-- CSS Files - Load in order: Framework → Icons → Custom -->
     
@@ -20,22 +20,24 @@
         $isAdminLayout = $user && in_array($user->role, ['admin', 'staff', 'owner']);
     @endphp
 
-    <!-- Custom CSS -->
+    <!-- Base & Layout -->
     <link href="{{ asset('assets/css/app.css') }}" rel="stylesheet">
-    
-    <!-- Client-facing styles -->
-    <link rel="stylesheet" href="{{ asset('assets/css/client/verification/verification.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/client/car/car.css') }}">
-   
+    <link rel="stylesheet" href="{{ asset('assets/css/home.css') }}">
+
+    @if($isAdminLayout)
     <!-- Admin styles -->
     <link rel="stylesheet" href="{{ asset('assets/css/admin/admin.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/admin/user/user.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/admin/cars/car.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/admin/verification/verification.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/css/admin/dashboard.css') }}">
-
-    <link rel="stylesheet" href="{{asset('assets/css/app.css')}}">
-    <link rel="stylesheet" href="{{asset('assets/css/home.css')}}">
+    @else
+    <!-- Client styles -->
+    <link rel="stylesheet" href="{{ asset('assets/css/client/verification/verification.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/client/car/car.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/client/booking/booking.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/client/header/header.css') }}">
+    @endif
 </head>
 <body class="{{ $isAdminLayout ? 'admin-body' : '' }}">
 
@@ -43,11 +45,13 @@
     @include('layouts.navigation')
 
     <!-- Main Content -->
-    <main class="{{ $isAdminLayout ? 'admin-main' : 'client-main' }}">
-        <div class="page">
+    @php
+        $isLandingPage = request()->routeIs('home') || request()->routeIs('client.home');
+    @endphp
+    <main class="{{ $isAdminLayout ? 'admin-main' : 'client-main' }}{{ !$isAdminLayout && $isLandingPage ? ' landing-main' : '' }}">
+        <div class="page" style="overflow: visible !important;">
             {{ $slot }}
         </div>
-        
     </main>
 
     <!-- JavaScript Files - Load in order: Libraries → Framework → Custom -->
@@ -68,16 +72,31 @@
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('sidebarOverlay');
             const toggleBtn = document.getElementById('sidebarToggle');
+            const collapseToggle = document.getElementById('sidebarCollapseToggle');
             
+            // Mobile: show/hide sidebar with overlay
             if (sidebar && toggleBtn) {
                 function toggleSidebar() {
                     const isOpen = sidebar.classList.contains('show');
                     sidebar.classList.toggle('show');
                     if (overlay) overlay.style.display = isOpen ? 'none' : 'block';
                 }
-                
                 toggleBtn.addEventListener('click', toggleSidebar);
                 if (overlay) overlay.addEventListener('click', toggleSidebar);
+            }
+            
+            // Desktop: collapse/expand sidebar
+            if (sidebar && collapseToggle) {
+                const saved = localStorage.getItem('adminSidebarCollapsed');
+                if (saved === 'true') {
+                    sidebar.classList.add('collapsed');
+                    document.body.classList.add('sidebar-collapsed');
+                }
+                collapseToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('collapsed');
+                    document.body.classList.toggle('sidebar-collapsed');
+                    localStorage.setItem('adminSidebarCollapsed', sidebar.classList.contains('collapsed'));
+                });
             }
         });
     </script>

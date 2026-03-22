@@ -14,38 +14,78 @@ use Illuminate\Validation\ValidationException;
 class UserController extends Controller
 {
     /**
-     * Display a listing of users
+     * Display a listing of users with search, filter, and pagination
      */
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::all();
-            
-        return view('admin.user.user', compact('users'));
+        $q       = trim((string) $request->query('q', ''));
+        $role    = $request->query('role');
+        $perPage = (int) $request->query('per_page', 10);
+        $perPage = max(5, min(100, $perPage));
+
+        $query = User::query();
+
+        // Search by name, email, or phone
+        if ($q !== '') {
+            $query->where(function ($userQuery) use ($q) {
+                $userQuery
+                    ->where('name',  'like', "%{$q}%")
+                    ->orWhere('email', 'like', "%{$q}%")
+                    ->orWhere('phone', 'like', "%{$q}%");
+            });
+        }
+
+        // Filter by role
+        $allowedRoles = ['admin', 'owner', 'staff', 'client'];
+        if ($role && in_array($role, $allowedRoles, true)) {
+            $query->where('role', $role);
+        }
+
+        $users = $query->orderByDesc('created_at')->paginate($perPage)->withQueryString();
+
+        // Stats always from full table (unaffected by search/filter)
+        $allUsers = User::all();
+        $stats = [
+            'total'  => $allUsers->count(),
+            'admin'  => $allUsers->where('role', 'admin')->count(),
+            'owner'  => $allUsers->where('role', 'owner')->count(),
+            'staff'  => $allUsers->where('role', 'staff')->count(),
+            'client' => $allUsers->where('role', 'client')->count(),
+        ];
+
+        return view('admin.user.user', compact(
+            'users',
+            'stats',
+            'q',
+            'role',
+            'perPage'
+        ));
     }
 
-    
-
-
-    public function show($id){
-        try{
-            $user = User::findOrfail($id);
+    /**
+     * Show a single user (AJAX)
+     */
+    public function show($id)
+    {
+        try {
+            $user = User::findOrFail($id);
 
             return response()->json([
-                "message" => "User Found",
-                "user" => $user
-
+                'success' => true,
+                'message' => 'User found',
+                'user'    => $user,
             ]);
-        }catch(\Exception $e){
-            return response()->json([
-                "message" => "User not found",
-                "success" => false
 
-            ],404);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User not found',
+            ], 404);
         }
     }
 
     /**
-     * Display the specified user
+     * Return user data for edit modal (AJAX)
      */
     public function edit($id)
     {
@@ -54,28 +94,28 @@ class UserController extends Controller
 
             return response()->json([
                 'success' => true,
-                'user' => $user
+                'user'    => $user,
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'User not found'
+                'message' => 'User not found',
             ], 404);
         }
     }
 
     /**
-     * Store a newly created user
+     * Store a newly created user (AJAX)
      */
     public function store(Request $request)
     {
         try {
             $validated = $request->validate([
-                'name' => 'required|string|min:2|max:50',
-                'email' => 'required|email|unique:users,email|max:100',
-                'phone' => 'nullable|string|min:9|max:20',
-                'role' => 'required|in:admin,owner,staff,client',
+                'name'     => 'required|string|min:2|max:50',
+                'email'    => 'required|email|unique:users,email|max:100',
+                'phone'    => 'nullable|string|min:9|max:20',
+                'role'     => 'required|in:admin,owner,staff,client',
                 'password' => 'required|min:8|confirmed',
             ]);
 
@@ -86,66 +126,64 @@ class UserController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'User created successfully',
-                'user' => $user
+                'user'    => $user,
             ], 201);
 
         } catch (ValidationException $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
-                'errors' => $e->errors()
+                'errors'  => $e->errors(),
             ], 422);
+
         } catch (\Exception $e) {
             Log::error('User creation failed: ' . $e->getMessage());
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create user: ' . $e->getMessage()
+                'message' => 'Failed to create user: ' . $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Update the specified user
+     * Update the specified user (AJAX)
      */
     public function update(Request $request, $id)
     {
         try {
-            // Log incoming request for debugging
             Log::info('Update request received', [
                 'user_id' => $id,
-                'data' => $request->all()
+                'data'    => $request->all(),
             ]);
 
             $user = User::findOrFail($id);
 
-            // Build validation rules
             $rules = [
-                'name' => 'required|string|min:2|max:50',
+                'name'  => 'required|string|min:2|max:50',
                 'email' => [
                     'required',
                     'email',
                     'max:100',
-                    Rule::unique('users')->ignore($id)
+                    Rule::unique('users')->ignore($id),
                 ],
                 'phone' => 'nullable|string|min:9|max:20',
-                'role' => 'required|in:admin,owner,staff,client',
+                'role'  => 'required|in:admin,owner,staff,client',
             ];
 
-            // Only validate password if it's provided
+            // Only validate password if provided
             if ($request->filled('password')) {
                 $rules['password'] = 'required|min:8|confirmed';
             }
 
             $validated = $request->validate($rules);
 
-            // Only update password if provided
             if (!empty($validated['password'])) {
                 $validated['password'] = Hash::make($validated['password']);
             } else {
                 unset($validated['password']);
             }
 
-            // Remove password_confirmation from validated data
             unset($validated['password_confirmation']);
 
             $user->update($validated);
@@ -155,42 +193,42 @@ class UserController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'User updated successfully',
-                'user' => $user
+                'user'    => $user,
             ]);
 
         } catch (ValidationException $e) {
             Log::warning('Validation failed', [
                 'user_id' => $id,
-                'errors' => $e->errors()
+                'errors'  => $e->errors(),
             ]);
 
             return response()->json([
                 'success' => false,
                 'message' => 'Validation failed',
-                'errors' => $e->errors()
+                'errors'  => $e->errors(),
             ], 422);
 
         } catch (ModelNotFoundException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'User not found'
+                'message' => 'User not found',
             ], 404);
 
         } catch (\Exception $e) {
             Log::error('User update failed', [
                 'user_id' => $id,
-                'error' => $e->getMessage()
+                'error'   => $e->getMessage(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update user: ' . $e->getMessage()
+                'message' => 'Failed to update user: ' . $e->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Remove the specified user
+     * Remove the specified user (AJAX)
      */
     public function destroy($id)
     {
@@ -200,13 +238,21 @@ class UserController extends Controller
 
             return response()->json([
                 'success' => true,
-                'message' => 'User deleted successfully'
+                'message' => 'User deleted successfully',
             ]);
 
-        } catch (\Exception $e) {
+        } catch (ModelNotFoundException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete user'
+                'message' => 'User not found',
+            ], 404);
+
+        } catch (\Exception $e) {
+            Log::error('User deletion failed: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete user',
             ], 500);
         }
     }

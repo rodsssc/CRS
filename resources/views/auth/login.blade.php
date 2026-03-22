@@ -3,11 +3,10 @@
 
         <!-- Logo overlapping top of card -->
         <div class="card-logo">
-            <x-application-logo class="card-logo-image"  />
+            <x-application-logo class="card-logo-image" />
         </div>
 
         <div class="form-header">
-           
             <p class="form-subtitle">Sign in to your account</p>
         </div>
 
@@ -15,7 +14,7 @@
             @csrf
 
             @if (session('status'))
-                <div class="alert alert-success">
+                <div class="alert-success">
                     {{ session('status') }}
                 </div>
             @endif
@@ -69,6 +68,7 @@
             </div>
 
             <button type="submit" class="login-btn">Sign In</button>
+
             <p class="register-link">
                 Don't have an account? <a href="{{ route('register') }}">Create Account</a>
             </p>

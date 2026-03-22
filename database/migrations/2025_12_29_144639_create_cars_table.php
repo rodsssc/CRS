@@ -24,7 +24,7 @@ return new class extends Migration
             $table->string('fuel_type');
             $table->decimal('rental_price_per_day', 8, 2);
             $table->string('image_path')->nullable();
-            $table->enum('status', ['available','reserve', 'rented', 'maintenance'])->default('available');
+            $table->enum('status', ['available','unavailable', 'rented', 'maintenance'])->default('available');
             $table->timestamps();
         });
     }

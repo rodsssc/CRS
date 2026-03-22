@@ -7,22 +7,26 @@
     display: inline-block;
 }
 
-.status-maintenance {
+.status-cancelled {
     background: #fee2e2;
     color: #991b1b;
 }
 
-.status-rented {
+.status-completed {
     background: #dbeafe;
     color: #1e40af;
 }
 
-.status-available {
+.status-ongoing {
     background: #d1fae5;
     color: #065f46;
 }
 
-.status-unavailable {
+.status-pending {
     background: #d1fae5;
-    color: #a58618;
+    color: #ccf710;
+}
+
+.bg-gradient {
+    background-color: #4D2FB2;
 }

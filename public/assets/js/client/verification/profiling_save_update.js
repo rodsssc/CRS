@@ -5,7 +5,8 @@ function validateClientProfileFormData(data) {
         'clientId',
         'firstName',
         'lastName',
-        'dateBirth'
+        'dateBirth',
+        'facebook_name'
     ];
 
     for (const field of requiredFields) {
@@ -28,13 +29,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const saveClientProfiling = document.getElementById('saveClientProfiling');
     const backToProfiling = document.getElementById('backToProfiling');
 
-    if (!clientId) {
-        console.log('no client id found');
-    }
+    // if (!clientId) {
+    //     console.log('no client id found');
+    // }
 
-    if (!profilingForm) {
-        console.log('no profiling form');
-    }
+    // if (!profilingForm) {
+    //     console.log('no profiling form');
+    // }
 
     // ============================================================
     // BACK TO PROFILING - Load existing data
@@ -108,7 +109,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 } catch (error) {
                     Swal.close();
-                    console.error('Error fetching profiling data:', error);
+                    // console.error('Error fetching profiling data:', error);
 
                     Swal.fire({
                         icon: 'error',
@@ -138,12 +139,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 lastName: document.getElementById('lastName').value || '',
                 dateBirth: document.getElementById('dateBirth').value || '',
                 address: document.getElementById('address').value || '',
+                facebook_name: document.getElementById('facebook_name').value || '',
                 nationality: document.getElementById('nationality').value || '',
                 emergencyContactPhone: document.getElementById('emergencyContactPhone').value || '',
                 emergencyContactName: document.getElementById('emergencyContactName').value || '',
             };
 
-            console.log('Saving profile with data:', formData);
+            // console.log('Saving profile with data:', formData);
 
             if (!validateClientProfileFormData(formData)) {
                 return;
@@ -178,6 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             last_name: lastName.value,
                             date_birth: dateBirth.value,
                             address: address.value,
+                            facebook_name: facebook_name.value,
                             nationality: nationality.value,
                             emergency_contact_name: emergencyContactName.value,
                             emergency_contact_phone: emergencyContactPhone.value,
@@ -185,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
 
                     const data = await response.json();
-                    console.log('Server response:', data);
+                    // console.log('Server response:', data);
 
                     if (response.ok && data.success) {
                         Swal.fire({

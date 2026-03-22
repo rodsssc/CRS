@@ -75,148 +75,145 @@
 
 
         <!-- Table Card -->
-        <div class="table-card">
+        <div class="table-card d-flex flex-column" style="min-height: 520px;">
+
             <!-- Search and Controls -->
             <div class="table-controls">
-                <div class="row g-2 align-items-center">
-                    <!-- Search Bar -->
+                <form method="GET" action="{{ route('admin.verification.index') }}" class="row g-2 align-items-center">
+
+                    {{-- Search --}}
                     <div class="col-md-6 col-lg-5">
                         <div class="search-box">
                             <i class="fas fa-search search-icon"></i>
-                            <input type="text" 
-                                   class="form-control form-control-sm" 
-                                   placeholder="Search users...">
+                            <input type="text"
+                                class="form-control form-control-sm"
+                                name="q"
+                                value="{{ $q ?? '' }}"
+                                placeholder="Search name, email, phone..."
+                                autocomplete="off">
                         </div>
                     </div>
 
-                    <!-- Role Filter -->
-                    <div class="col-md-3 col-lg-3">
-                        <select class="form-select form-select-sm">
-                            <option selected>All </option>
-                            <option>Verified</option>
-                            <option>Pending</option>
-                            <option>Reject</option>
-                            
+                    {{-- Search & Clear --}}
+                    <div class="col-auto d-flex gap-2">
+                        <button class="btn btn-primary btn-sm" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+                        <a class="btn btn-outline-secondary btn-sm" href="{{ route('admin.verification.index') }}">Clear</a>
+                    </div>
+
+                    {{-- Status Filter --}}
+                    <div class="col-md-3 col-lg-2">
+                        <select class="form-select form-select-sm" name="status" onchange="this.form.submit()">
+                            <option value="">All Status</option>
+                            <option value="approved" @selected(($status ?? '') === 'approved')>Verified</option>
+                            <option value="pending"  @selected(($status ?? '') === 'pending')>Pending</option>
+                            <option value="rejected" @selected(($status ?? '') === 'rejected')>Rejected</option>
                         </select>
                     </div>
 
-                    <!-- Entries Per Page -->
-                    <div class="col-md-5 col-lg-2">
-                        <select class="form-select form-select-sm">
-                            <option>10 per page</option>
-                            <option>25 per page</option>
-                            <option>50 per page</option>
+                    {{-- Per Page --}}
+                    <div class="col-md-2 col-lg-2 ms-lg-auto">
+                        <select class="form-select form-select-sm" name="per_page" onchange="this.form.submit()">
+                            <option value="10" @selected(($perPage ?? 10) == 10)>10 per page</option>
+                            <option value="25" @selected(($perPage ?? 10) == 25)>25 per page</option>
+                            <option value="50" @selected(($perPage ?? 10) == 50)>50 per page</option>
                         </select>
                     </div>
-                </div>
+
+                </form>
             </div>
 
-            <!-- Table -->
-            <div class="table-responsive">
+            <!-- Table — grows to fill available space -->
+            <div class="table-responsive flex-grow-1">
                 <table class="table custom-table mb-0">
                     <thead>
                         <tr>
-                            <th width="5%">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="selectAll">
-                                </div>
-                            </th>
-                            <th >First name</th>
-                            <th >Last name</th>
-                            <th >Phone no.</th>
-                            <th >Date birth</th>
+                            
+                            <th>Client ID</th>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>Phone No.</th>
+                            <th>Date Birth</th>
                             <th>Address</th>
-                            <th>facebook name</th>
+                            <th>Facebook Name</th>
                             <th>Status</th>
                             <th>Action</th>
                         </tr>
                     </thead>
-                    <tbody> 
-                        @foreach ($clientProfile as $client)
+                    <tbody>
+                        @forelse ($clientProfile as $client)
+                            @php $verification = $client->user->latestVerification; @endphp
                             <tr>
+                                
                                 <td>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox">
-                                    </div>
+                                    <span class="client-first-name">#00{{ $client->id }}</span>
                                 </td>
                                 <td>
-                                    <div class="user-info">
-                                        <span class="client-first-name">{{$client->first_name}}</span>
-                                    </div>
+                                    <span class="client-first-name">{{ $client->first_name }}</span>
                                 </td>
-                                <td class="text-muted ">
-                                    <div class="car-last-name">
-                                        <span>{{$client->last_name}}</span>
-                                    </div>
+                                <td class="text-muted">{{ $client->last_name }}</td>
+                                <td class="text-muted">{{ $client->user->phone }}</td>
+                                <td class="text-muted">
+                                    {{ $client->date_birth ? $client->date_birth->format('M d, Y') : 'N/A' }}
                                 </td>
-                               
-                                 <td class="text-muted">{{$client->user->phone}}</td>
-                                 <td class="text-muted">{{ $client->date_birth ? $client->date_birth->format('M d, Y') : 'N/A' }}</td>
-                                 <td class="text-muted">{{$client->address}}</td>
-                                 <td class="text-muted">{{$client->facebook_name?: "Not Provided"}}</td>
-
-                                 @php
-                                    $verification = $client->user->latestVerification;
-                                @endphp
-
-                                    <td>
-                                        @if($verification->status === 'pending')
-                                            <span class="status-tag status-pending">Pending</span>
-                                        @elseif($verification?->status === 'approved')
-                                            <span class="status-tag status-approved">Approved</span>
-                                        @elseif($verification?->status === 'rejected')
-                                            <span class="status-tag status-rejected">Rejected</span>
-                                        @else
-                                            <span class="text-muted">Not Submitted</span>
-                                        @endif
-                                    </td>
+                                <td class="text-muted">{{ $client->address }}</td>
+                                <td class="text-muted">{{ $client->facebook_name ?: 'Not Provided' }}</td>
+                                <td>
+                                    @if($verification?->status === 'pending')
+                                        <span class="status-tag status-pending">Pending</span>
+                                    @elseif($verification?->status === 'approved')
+                                        <span class="status-tag status-approved">Approved</span>
+                                    @elseif($verification?->status === 'rejected')
+                                        <span class="status-tag status-rejected">Rejected</span>
+                                    @else
+                                        <span class="text-muted">Not Submitted</span>
+                                    @endif
+                                </td>
                                 <td>
                                     <div class="action-buttons">
-                                        <button class="btn-action" title="View" data-verification-id="{{$client->client_id}}">
+                                        <button class="btn-action" title="View"
+                                                data-user-id="{{ $client->client_id }}">
                                             <i class="fas fa-eye"></i>
                                         </button>
-                                      
-                                        <button class="btn-action" title="Delete"  data-verification-id="{{$verification->id}}" id="rejectVerificationBtn"">
-                                            <i class="fas fa-trash"></i>
+                                        <button type="button" class="btn-action" title="Reject"
+                                                data-verification-id="{{ $verification?->id }}">
+                                            <i class="fas fa-times"></i>
                                         </button>
                                     </div>
                                 </td>
                             </tr>
-                        @endforeach
-                              
+                        @empty
+                            <tr>
+                                <td colspan="9" class="text-center text-muted py-5">
+                                    <i class="fas fa-inbox fs-4 mb-2 d-block"></i>
+                                    No records found
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
 
-            <!-- Pagination -->
-            <div class="table-footer">
+            <!-- Footer — always at bottom -->
+            <div class="table-footer mt-auto">
                 <div class="showing-entries">
-                    Showing 1-10
+                    @if($clientProfile->total() > 0)
+                        Showing {{ $clientProfile->firstItem() }}–{{ $clientProfile->lastItem() }}
+                        of {{ $clientProfile->total() }}
+                    @else
+                        Showing 0 of 0
+                    @endif
                 </div>
-                <nav>
-                    <ul class="pagination mb-0">
-                        <li class="page-item disabled">
-                            <a class="page-link" href="#">
-                                <i class="fas fa-chevron-left"></i>
-                            </a>
-                        </li>
-                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                        <li class="page-item"><a class="page-link" href="#">2</a></li>
-                        <li class="page-item">
-                            <a class="page-link" href="#">
-                                <i class="fas fa-chevron-right"></i>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
+                <div>
+                    {{ $clientProfile->links() }}
+                </div>
             </div>
+
         </div>
     </div>
 
 </x-app-layout>
-<script src="{{asset('assets/js/admin/verification/show.js')}}"></script>
-<script src="{{asset('assets/js/admin/verification/reject.js')}}"></script>
-<script src="{{asset('assets/js/admin/verification/approve.js')}}"></script>
+<script src="{{asset('assets/js/admin/verification/verification.js')}}"></script>
+
 
 {{-- View Verification Modal --}}
 <div class="modal fade" tabindex="-1" id="viewVerificationModal">
@@ -385,8 +382,12 @@
                 <button type="button" class="btn btn-secondary btn-sm px-4" data-bs-dismiss="modal">
                     <i class="fas fa-times me-1"></i>Close
                 </button>
-                <button type="button" class="btn btn-primary btn-sm px-4"
-                        data-verification-id="{{$verification->id}}" id="approveVerificationBtn">
+                <button type="button" class="btn btn-danger btn-sm px-4"
+                        id="rejectVerificationBtn" data-verification-id="" style="display:none;">
+                    <i class="fas fa-times me-1"></i>Reject
+                </button>
+                <button type="button" class="btn btn-bg-color px-4"
+                        id="approveVerificationBtn" data-verification-id="" style="display:none;">
                     <i class="fas fa-check me-1"></i>Approve
                 </button>
             </div>
@@ -394,3 +395,66 @@
         </div>
     </div>
 </div>
+
+<!-- Reject Verification Modal -->
+<div class="modal fade" id="rejectVerificationModal" tabindex="-1" aria-labelledby="rejectVerificationModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
+            <div class="modal-header bg-header text-white border-0 px-4 py-3">
+                <div>
+                    <h5 class="modal-title fw-bold mb-0" id="rejectVerificationModalLabel">
+                        <i class="fas fa-times-circle me-2"></i>Reject Verification
+                    </h5>
+                    <p class="text-white-50 mb-0" style="font-size:11px;">Please provide a reason for rejection</p>
+                </div>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 bg-light">
+                <input type="hidden" id="rejectionVerificationId">
+                
+                <div class="mb-3">
+                    <label for="rejectionReasonInput" class="form-label small fw-semibold text-muted mb-2">
+                        Rejection Reason <span class="text-muted">(optional)</span>
+                    </label>
+                    <textarea 
+                        class="form-control" 
+                        id="rejectionReasonInput" 
+                        rows="4" 
+                        placeholder="e.g. Blurry ID image, mismatched information, incomplete documents..."
+                        maxlength="500"
+                    ></textarea>
+                    <div class="d-flex justify-content-end mt-1">
+                        <small class="text-muted"><span id="rejectionCharCount">0</span>/500</small>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning bg-warning-soft border-0 small mb-3">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    This action cannot be undone. The client will be notified of the rejection.
+                </div>
+            </div>
+            <div class="modal-footer border-0 bg-light px-4 py-3">
+                <button type="button" class="btn btn-secondary btn-sm" id="cancelRejectBtn" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-danger btn-sm" id="confirmRejectBtn">
+                    <i class="fas fa-check me-1"></i>Confirm Rejection
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Character counter for rejection modal
+    document.addEventListener('DOMContentLoaded', function() {
+        const rejectionInput = document.getElementById('rejectionReasonInput');
+        const charCount = document.getElementById('rejectionCharCount');
+        
+        if (rejectionInput && charCount) {
+            rejectionInput.addEventListener('input', function() {
+                charCount.textContent = this.value.length;
+            });
+        }
+    });
+</script>v

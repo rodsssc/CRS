@@ -1,322 +1,235 @@
 {{-- dashboard.blade.php --}}
 <x-app-layout>
-    <div class="p-6">
-        <!-- Header Section -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h1 class="h3 mb-0 text-foreground font-weight-bold">Dashboard</h1>
-                <p class="text-muted-foreground small">Welcome back to your car rental management overview.</p>
-            </div>
-           
+
+<div class="dash-wrap">
+
+    {{-- ── HEADER ──────────────────────────────────────────────────────────── --}}
+    <div class="dash-header">
+        <div>
+            <h1 class="dash-title">Dashboard</h1>
+            <p class="dash-subtitle">Welcome back — here's your car rental overview.</p>
         </div>
-
-        <!-- Metric Cards -->
-        <div class="row g-4 mb-4">
-            <div class="col-12 col-md-6 col-lg-3">
-                <div class="card bg-card border-border shadow-sm">
-                    <div class="card-body p-4">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="text-muted-foreground small font-weight-medium">Total Users</span>
-                            <div class="bg-primary/10 p-2 rounded-circle">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="var(--color-primary)" viewBox="0 0 16 16">
-                                    <path d="M7 14s-1 0-1-1 1-4 5-4 5 3 5 4-1 1-1 1H7zm4-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/>
-                                    <path fill-rule="evenodd" d="M5.216 14A2.238 2.238 0 0 1 5 13c0-1.355.68-2.75 1.936-3.72A6.325 6.325 0 0 0 5 9c-4 0-5 3-5 4s1 1 1 1h4.216z"/>
-                                    <path d="M4.5 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z"/>
-                                </svg>
-                            </div>
-                        </div>
-                        <h2 class="h4 mb-1 font-weight-bold">{{ number_format($totalUsers ?? 0) }}</h2>
-                        <span class="text-muted small">All registered users</span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6 col-lg-3">
-                <div class="card bg-card border-border shadow-sm">
-                    <div class="card-body p-4">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="text-muted-foreground small font-weight-medium">Available Cars</span>
-                            <div class="bg-primary/10 p-2 rounded-circle">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="var(--color-primary)" viewBox="0 0 16 16">
-                                    <path d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5z"/>
-                                </svg>
-                            </div>
-                        </div>
-                        <h2 class="h4 mb-1 font-weight-bold">{{ number_format($availableCars ?? 0) }}</h2>
-                        <span class="text-muted small">Cars ready for booking</span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6 col-lg-3">
-                <div class="card bg-card border-border shadow-sm">
-                    <div class="card-body p-4">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="text-muted-foreground small font-weight-medium">Active Bookings</span>
-                            <div class="bg-primary/10 p-2 rounded-circle">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="var(--color-primary)" viewBox="0 0 16 16">
-                                    <path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1z"/>
-                                    <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
-                                </svg>
-                            </div>
-                        </div>
-                        <h2 class="h4 mb-1 font-weight-bold">{{ number_format($activeBookings ?? 0) }}</h2>
-                        <span class="text-muted small">Pending + ongoing bookings</span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-md-6 col-lg-3">
-                <div class="card bg-card border-border shadow-sm">
-                    <div class="card-body p-4">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="text-muted-foreground small font-weight-medium">Total Revenue</span>
-                            <div class="bg-primary/10 p-2 rounded-circle">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="var(--color-primary)" viewBox="0 0 16 16">
-                                    <path d="M12.136.326A1.5 1.5 0 0 1 14 1.78V3h.5a.5.5 0 0 1 0 1H14v2h.5a.5.5 0 0 1 0 1H14v2h.5a.5.5 0 0 1 0 1H14v2h.5a.5.5 0 0 1 0 1H14v1.22a1.5 1.5 0 0 1-1.864 1.454L3.5 14.5a.5.5 0 0 1 0-1L12.136 12.326z"/>
-                                </svg>
-                            </div>
-                        </div>
-                        <h2 class="h4 mb-1 font-weight-bold">₱{{ number_format((float)($totalRevenue ?? 0), 2) }}</h2>
-                        <span class="text-muted small">Completed payments</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Revenue / Commission / Bookings Chart --}}
-        <div class="row g-4 mb-4">
-            <div class="col-12">
-                <div class="card bg-card border-border shadow-sm">
-                    <div class="card-header bg-transparent border-border p-4 d-flex justify-content-between align-items-center">
-                        <h3 class="h5 mb-0 text-foreground font-weight-bold">
-                            Revenue, Commission &amp; Bookings (Last 7 Days)
-                        </h3>
-                    </div>
-                    <div class="card-body p-4">
-                        <div style="position: relative; height: 260px;">
-                            <canvas id="dashboardRevenueChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row g-4">
-            <!-- Recent Bookings Table -->
-            <div class="col-12 col-xl-8">
-                <div class="card bg-card border-border shadow-sm h-100">
-                    <div class="card-header bg-transparent border-border p-4 d-flex justify-content-between align-items-center">
-                        <h3 class="h5 mb-0 text-foreground font-weight-bold">Recent Bookings</h3>
-                        <a href="{{ route('admin.bookings.index') }}" class="text-primary small font-weight-medium">View all</a>
-                    </div>
-                    <div class="card-body p-0">
-                        <div class="table-responsive">
-                            <table class="table table-hover mb-0">
-                                <thead class="bg-muted/50">
-                                    <tr>
-                                        <th class="border-0 px-4 py-3 text-muted-foreground small text-uppercase">Booking ID</th>
-                                        <th class="border-0 px-4 py-3 text-muted-foreground small text-uppercase">Customer</th>
-                                        <th class="border-0 px-4 py-3 text-muted-foreground small text-uppercase">Car Model</th>
-                                        <th class="border-0 px-4 py-3 text-muted-foreground small text-uppercase">Date</th>
-                                        <th class="border-0 px-4 py-3 text-muted-foreground small text-uppercase">Status</th>
-                                        <th class="border-0 px-4 py-3 text-muted-foreground small text-uppercase text-right">Amount</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse(($recentBookings ?? collect()) as $booking)
-                                        @php
-                                            $amount = (float) $booking->final_amount > 0 ? (float) $booking->final_amount : (float) $booking->car_amount;
-                                        @endphp
-                                        <tr>
-                                            <td class="px-4 py-3 align-middle font-weight-medium">#BK-{{ $booking->id }}</td>
-                                            <td class="px-4 py-3 align-middle">
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <div class="bg-secondary p-1 rounded-circle" style="width: 24px; height: 24px;"></div>
-                                                    <span>{{ $booking->client?->name ?? '—' }}</span>
-                                                </div>
-                                            </td>
-                                            <td class="px-4 py-3 align-middle text-muted-foreground">
-                                                {{ $booking->car?->brand }} {{ $booking->car?->model }}
-                                            </td>
-                                            <td class="px-4 py-3 align-middle text-muted-foreground">
-                                                {{ optional($booking->created_at)->format('M d, Y') }}
-                                            </td>
-                                            <td class="px-4 py-3 align-middle">
-                                                @if($booking->status === 'pending')
-                                                    <span class="badge rounded-pill bg-primary-subtle text-primary px-3 py-1">Pending</span>
-                                                @elseif($booking->status === 'ongoing')
-                                                    <span class="badge rounded-pill bg-success-subtle text-success px-3 py-1">Ongoing</span>
-                                                @elseif($booking->status === 'completed')
-                                                    <span class="badge rounded-pill bg-secondary-subtle text-secondary px-3 py-1">Completed</span>
-                                                @else
-                                                    <span class="badge rounded-pill bg-danger-subtle text-danger px-3 py-1">Cancelled</span>
-                                                @endif
-                                            </td>
-                                            <td class="px-4 py-3 align-middle text-right font-weight-bold">₱{{ number_format($amount, 2) }}</td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td class="px-4 py-4 text-center text-muted" colspan="6">No bookings found.</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Fleet Status List -->
-            <div class="col-12 col-xl-4">
-                <div class="card bg-card border-border shadow-sm h-100">
-                    <div class="card-header bg-transparent border-border p-4">
-                        <h3 class="h5 mb-0 text-foreground font-weight-bold">Fleet Overview</h3>
-                    </div>
-                    <div class="card-body p-4">
-                        @php
-                            $available = (int) (($carStatusCounts['available'] ?? 0));
-                            $rented = (int) (($carStatusCounts['rented'] ?? 0));
-                            $maintenance = (int) (($carStatusCounts['maintenance'] ?? 0));
-                            $totalCarsSafe = max(1, (int) ($totalCars ?? 0));
-                            $pAvail = round(($available / $totalCarsSafe) * 100);
-                            $pRented = round(($rented / $totalCarsSafe) * 100);
-                            $pMaint = round(($maintenance / $totalCarsSafe) * 100);
-                        @endphp
-
-                        <div class="mb-4">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span class="text-muted-foreground small">Available</span>
-                                <span class="text-foreground small font-weight-bold">{{ $available }} / {{ $totalCars ?? 0 }}</span>
-                            </div>
-                            <div class="progress bg-muted" style="height: 6px;">
-                                <div class="progress-bar bg-success" role="progressbar" style="width: {{ $pAvail }}%" aria-valuenow="{{ $pAvail }}" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                        </div>
-                        <div class="mb-4">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span class="text-muted-foreground small">Rented</span>
-                                <span class="text-foreground small font-weight-bold">{{ $rented }} / {{ $totalCars ?? 0 }}</span>
-                            </div>
-                            <div class="progress bg-muted" style="height: 6px;">
-                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $pRented }}%" aria-valuenow="{{ $pRented }}" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                        </div>
-                        <div class="mb-4">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span class="text-muted-foreground small">Maintenance</span>
-                                <span class="text-foreground small font-weight-bold">{{ $maintenance }} / {{ $totalCars ?? 0 }}</span>
-                            </div>
-                            <div class="progress bg-muted" style="height: 6px;">
-                                <div class="progress-bar bg-warning" role="progressbar" style="width: {{ $pMaint }}%" aria-valuenow="{{ $pMaint }}" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                        </div>
-                        
-                        <div class="mt-4 text-muted small">
-                            Total cars: <strong>{{ $totalCars ?? 0 }}</strong>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="dash-date">
+            <i class="fas fa-calendar-alt me-1"></i>{{ now()->format('F d, Y') }}
         </div>
     </div>
-    
-    @push('scripts')
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-        <script>
-            (function () {
-                const canvas = document.getElementById('dashboardRevenueChart');
-                if (!canvas || !window.CRS_ADMIN) return;
 
-                const ctx = canvas.getContext('2d');
-                const apiUrl = "{{ route('admin.dashboard.revenue-data') }}";
+    {{-- ── METRIC CARDS ────────────────────────────────────────────────────── --}}
+    <div class="metrics-grid">
 
-                CRS_ADMIN.requestJson(apiUrl)
-                    .then(({ res, data }) => {
-                        if (!res.ok || !data || !data.success) {
-                            throw data;
-                        }
+        <div class="metric-card">
+            <div class="metric-icon" style="background:rgba(59,130,246,.1);">
+                <i class="fas fa-users" style="color:#3b82f6;"></i>
+            </div>
+            <div class="metric-body">
+                <div class="metric-label">Total Users</div>
+                <div class="metric-value">{{ number_format($totalUsers ?? 0) }}</div>
+                <div class="metric-sub">All registered users</div>
+            </div>
+        </div>
 
-                        const labels = data.labels || [];
-                        const revenue = data.revenue || [];
-                        const commission = data.commission || [];
-                        const bookings = data.bookings || [];
+        <div class="metric-card">
+            <div class="metric-icon" style="background:rgba(34,197,94,.1);">
+                <i class="fas fa-car" style="color:#22c55e;"></i>
+            </div>
+            <div class="metric-body">
+                <div class="metric-label">Available Cars</div>
+                <div class="metric-value">{{ number_format($availableCars ?? 0) }}</div>
+                <div class="metric-sub">Ready for booking</div>
+            </div>
+        </div>
 
-                        new Chart(ctx, {
-                            type: 'bar',
-                            data: {
-                                labels,
-                                datasets: [
-                                    {
-                                        type: 'bar',
-                                        label: 'Bookings',
-                                        data: bookings,
-                                        backgroundColor: 'rgba(99, 102, 241, 0.15)',
-                                        borderColor: 'rgb(79, 70, 229)',
-                                        borderWidth: 1,
-                                        yAxisID: 'y1',
-                                    },
-                                    {
-                                        type: 'line',
-                                        label: 'Revenue (₱)',
-                                        data: revenue,
-                                        borderColor: 'rgb(59, 130, 246)',
-                                        backgroundColor: 'rgba(59, 130, 246, 0.12)',
-                                        borderWidth: 2,
-                                        tension: 0.35,
-                                        fill: true,
-                                        yAxisID: 'y',
-                                    },
-                                    {
-                                        type: 'line',
-                                        label: 'Commission (₱)',
-                                        data: commission,
-                                        borderColor: 'rgb(34, 197, 94)',
-                                        backgroundColor: 'rgba(34, 197, 94, 0.08)',
-                                        borderWidth: 2,
-                                        tension: 0.35,
-                                        fill: true,
-                                        yAxisID: 'y',
-                                    },
-                                ],
-                            },
-                            options: {
-                                responsive: true,
-                                maintainAspectRatio: false,
-                                interaction: {
-                                    mode: 'index',
-                                    intersect: false,
-                                },
-                                scales: {
-                                    y: {
-                                        type: 'linear',
-                                        position: 'left',
-                                        beginAtZero: true,
-                                        ticks: {
-                                            callback: (v) => '₱' + v,
-                                        },
-                                    },
-                                    y1: {
-                                        type: 'linear',
-                                        position: 'right',
-                                        beginAtZero: true,
-                                        grid: {
-                                            drawOnChartArea: false,
-                                        },
-                                        ticks: {
-                                            precision: 0,
-                                        },
-                                    },
-                                },
-                                plugins: {
-                                    legend: {
-                                        position: 'top',
-                                    },
-                                },
-                            },
-                        });
-                    })
-                    .catch((err) => {
-                        console.error('[Dashboard] Failed to load chart data', err);
-                    });
-            })();
-        </script>
-    @endpush
+        <div class="metric-card">
+            <div class="metric-icon" style="background:rgba(245,158,11,.1);">
+                <i class="fas fa-calendar-check" style="color:#f59e0b;"></i>
+            </div>
+            <div class="metric-body">
+                <div class="metric-label">Active Bookings</div>
+                <div class="metric-value">{{ number_format($activeBookings ?? 0) }}</div>
+                <div class="metric-sub">Pending + ongoing</div>
+            </div>
+        </div>
+
+        <div class="metric-card metric-card--dark">
+            <div class="metric-icon" style="background:rgba(255,255,255,.1);">
+                <i class="fas fa-peso-sign" style="color:#fff;"></i>
+            </div>
+            <div class="metric-body">
+                <div class="metric-label" style="color:rgba(255,255,255,.55);">Total Revenue</div>
+                <div class="metric-value" style="color:#fff;">₱{{ number_format((float)($totalRevenue ?? 0), 2) }}</div>
+                <div class="metric-sub" style="color:rgba(255,255,255,.4);">Completed payments</div>
+            </div>
+        </div>
+
+    </div>
+
+    {{-- ── CHART + FLEET ────────────────────────────────────────────────────── --}}
+    <div class="mid-grid">
+
+        {{-- Revenue Chart --}}
+        <div class="dash-card chart-card">
+            <div class="dash-card__head">
+                <div>
+                    <div class="dash-card__title">Revenue Overview</div>
+                    <div class="dash-card__sub">Last 7 days</div>
+                </div>
+                <span class="live-badge">
+                    <span class="live-dot"></span> Live
+                </span>
+            </div>
+            <div class="dash-card__body">
+                <div class="chart-wrap">
+                    <canvas id="dashboardRevenueChart"
+                            data-url="{{ route('admin.dashboard.revenue-data') }}">
+                    </canvas>
+                </div>
+            </div>
+        </div>
+
+        {{-- Fleet Overview --}}
+        <div class="dash-card fleet-card">
+            <div class="dash-card__head">
+                <div>
+                    <div class="dash-card__title">Fleet Overview</div>
+                    <div class="dash-card__sub">{{ $totalCars ?? 0 }} total vehicles</div>
+                </div>
+            </div>
+            <div class="dash-card__body">
+                @php
+                    $available   = (int)($carStatusCounts['available']   ?? 0);
+                    $rented      = (int)($carStatusCounts['rented']      ?? 0);
+                    $maintenance = (int)($carStatusCounts['maintenance'] ?? 0);
+                    $safe        = max(1, (int)($totalCars ?? 0));
+                @endphp
+
+                <div class="fleet-row">
+                    <div class="fleet-row__meta">
+                        <span class="fleet-dot" style="background:#22c55e;"></span>
+                        <span class="fleet-label">Available</span>
+                        <span class="fleet-count">{{ $available }}<span class="fleet-total">/{{ $totalCars ?? 0 }}</span></span>
+                    </div>
+                    <div class="fleet-track">
+                        <div class="fleet-fill" style="width:{{ round(($available/$safe)*100) }}%;background:#22c55e;"></div>
+                    </div>
+                </div>
+
+                <div class="fleet-row">
+                    <div class="fleet-row__meta">
+                        <span class="fleet-dot" style="background:#3b82f6;"></span>
+                        <span class="fleet-label">Rented</span>
+                        <span class="fleet-count">{{ $rented }}<span class="fleet-total">/{{ $totalCars ?? 0 }}</span></span>
+                    </div>
+                    <div class="fleet-track">
+                        <div class="fleet-fill" style="width:{{ round(($rented/$safe)*100) }}%;background:#3b82f6;"></div>
+                    </div>
+                </div>
+
+                <div class="fleet-row">
+                    <div class="fleet-row__meta">
+                        <span class="fleet-dot" style="background:#f59e0b;"></span>
+                        <span class="fleet-label">Maintenance</span>
+                        <span class="fleet-count">{{ $maintenance }}<span class="fleet-total">/{{ $totalCars ?? 0 }}</span></span>
+                    </div>
+                    <div class="fleet-track">
+                        <div class="fleet-fill" style="width:{{ round(($maintenance/$safe)*100) }}%;background:#f59e0b;"></div>
+                    </div>
+                </div>
+
+                {{-- Booking breakdown --}}
+                <div class="booking-grid">
+                    <div class="booking-chip booking-chip--warning">
+                        <div class="booking-chip__val">{{ $pendingBookings ?? 0 }}</div>
+                        <div class="booking-chip__lbl">Pending</div>
+                    </div>
+                    <div class="booking-chip booking-chip--info">
+                        <div class="booking-chip__val">{{ $ongoingBookings ?? 0 }}</div>
+                        <div class="booking-chip__lbl">Ongoing</div>
+                    </div>
+                    <div class="booking-chip booking-chip--success">
+                        <div class="booking-chip__val">{{ $completedBookings ?? 0 }}</div>
+                        <div class="booking-chip__lbl">Completed</div>
+                    </div>
+                    <div class="booking-chip booking-chip--danger">
+                        <div class="booking-chip__val">{{ $cancelledBookings ?? 0 }}</div>
+                        <div class="booking-chip__lbl">Cancelled</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    {{-- ── RECENT BOOKINGS ──────────────────────────────────────────────────── --}}
+    <div class="dash-card bookings-card">
+        <div class="dash-card__head">
+            <div>
+                <div class="dash-card__title">Recent Bookings</div>
+                <div class="dash-card__sub">Latest rental activity</div>
+            </div>
+            <a href="{{ route('admin.bookings.index') }}" class="view-all-btn">
+                View all <i class="fas fa-arrow-right ms-1" style="font-size:10px;"></i>
+            </a>
+        </div>
+        <div class="table-responsive">
+            <table class="bookings-table">
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>Customer</th>
+                        <th>Car</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th class="text-end">Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse(($recentBookings ?? collect()) as $booking)
+                        @php
+                            $amount = (float)$booking->final_amount > 0
+                                ? (float)$booking->final_amount
+                                : (float)$booking->car_amount;
+                        @endphp
+                        <tr>
+                            <td><span class="booking-id">#BK-{{ $booking->id }}</span></td>
+                            <td>
+                                <div class="customer-cell">
+                                    <div class="customer-avatar">
+                                        {{ strtoupper(substr($booking->client?->name ?? '?', 0, 1)) }}
+                                    </div>
+                                    <span>{{ $booking->client?->name ?? '—' }}</span>
+                                </div>
+                            </td>
+                            <td class="text-muted">{{ $booking->car?->brand }} {{ $booking->car?->model }}</td>
+                            <td class="text-muted">{{ optional($booking->created_at)->format('M d, Y') }}</td>
+                            <td>
+                                @php
+                                    $sc = ['pending'=>'status-pending','ongoing'=>'status-ongoing','completed'=>'status-completed','cancelled'=>'status-cancelled'];
+                                @endphp
+                                <span class="status-pill {{ $sc[$booking->status] ?? 'status-cancelled' }}">
+                                    {{ ucfirst($booking->status) }}
+                                </span>
+                            </td>
+                            <td class="text-end amount-cell">₱{{ number_format($amount, 2) }}</td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="empty-row">
+                                <i class="fas fa-inbox"></i>
+                                <span>No bookings found</span>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>{{-- /dash-wrap --}}
+
+@push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ asset('assets/js/admin/dashboard.js') }}"></script>
+@endpush
+
 </x-app-layout>

@@ -23,7 +23,7 @@ class clientProfileController extends Controller
                 'date_birth' => 'required|date',
                 'address' => 'required|string',
                 'nationality' => 'required|string',
-                'facebook_name' => 'nullable|string|max:255',
+                'facebook_name' => 'required|string|max:255',
                 'emergency_contact_name' => 'nullable|string|max:255',
                 'emergency_contact_phone' => 'nullable|string|max:20',
             ]);

@@ -24,43 +24,46 @@ class bookingController extends Controller
      * This is used by the client bookings page to render a dynamic list with
      * loading and error states on the frontend.
      */
-    public function list(Request $request)
-    {
-        $user = $request->user();
+   public function list(Request $request)
+{
+    $user = $request->user();
 
-        $bookings = Rental::with('car')
-            ->where('client_id', $user->id)
-            ->orderByDesc('created_at')
-            ->get()
-            ->map(function (Rental $rental) {
-                $car = $rental->car;
+    $bookings = Rental::with('car')
+        ->where('client_id', $user->id)
+        ->orderByDesc('created_at')
+        ->get()
+        ->map(function (Rental $rental) {
+            $car = $rental->car;
 
-                return [
-                    'id' => $rental->id,
-                    'status' => $rental->status,
-                    'destination_from' => $rental->destinationFrom,
-                    'destination_to' => $rental->destinationTo,
-                    'rental_start_date' => optional($rental->rental_start_date)->toDateTimeString(),
-                    'rental_end_date' => optional($rental->rental_end_date)->toDateTimeString(),
-                    'total_days' => $rental->total_days,
-                    'total_hours' => $rental->total_hours,
-                    'final_amount' => (float) ($rental->final_amount ?? 0),
-                    'car' => $car ? [
-                        'id' => $car->id,
-                        'brand' => $car->brand,
-                        'model' => $car->model,
-                        'plate_number' => $car->plate_number,
-                        'image_path' => $car->image_path,
-                    ] : null,
-                ];
-            })
-            ->all();
+            return [
+                'id'               => $rental->id,
+                'status'           => $rental->status,
+                'destination_from' => $rental->destinationFrom,
+                'destination_to'   => $rental->destinationTo,
+                'rental_start_date'=> optional($rental->rental_start_date)->toDateTimeString(),
+                'rental_end_date'  => optional($rental->rental_end_date)->toDateTimeString(),
+                'total_days'       => $rental->total_days,
+                'total_hours'      => $rental->total_hours,
+                'car_amount'       => (float) ($rental->car_amount        ?? 0),
+                'destination_amount'=> (float) ($rental->destination_amount ?? 0),
+                'discount_amount'  => (float) ($rental->discount_amount   ?? 0),
+                'final_amount'     => (float) ($rental->final_amount      ?? 0),
+                'car' => $car ? [
+                    'id'           => $car->id,
+                    'brand'        => $car->brand,
+                    'model'        => $car->model,
+                    'plate_number' => $car->plate_number,
+                    'image_path'   => $car->image_path,
+                ] : null,
+            ];
+        })
+        ->all();
 
-        return response()->json([
-            'success' => true,
-            'data' => $bookings,
-        ]);
-    }
+    return response()->json([
+        'success' => true,
+        'data'    => $bookings,
+    ]);
+}
     
     public function store(Request $request)
     {

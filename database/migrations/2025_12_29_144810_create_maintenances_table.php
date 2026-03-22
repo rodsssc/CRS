@@ -13,14 +13,25 @@ return new class extends Migration
     {
         Schema::create('maintenances', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('car_id')->constrained('cars')->onDelete('cascade');
-            $table->text('description');
-            $table->date('maintenance_date');
-            $table->decimal('cost', 10, 2);
-            
+
+            $table->foreignId('car_id')->constrained('cars')->cascadeOnDelete();
+            $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
+
+            $table->string('title', 120);
+            $table->text('description')->nullable();
+
+            $table->date('service_date');
+            $table->decimal('cost', 12, 2)->default(0);
+
+            $table->enum('status', ['scheduled', 'in_progress', 'completed', 'cancelled'])->default('scheduled');
+
             $table->timestamps();
+
+            $table->index(['car_id', 'service_date']);
+            $table->index(['status', 'service_date']);
         });
     }
+
 
     /**
      * Reverse the migrations.

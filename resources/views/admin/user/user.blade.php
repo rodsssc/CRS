@@ -75,39 +75,48 @@
 
         <!-- Table Card -->
         <div class="table-card">
-            <!-- Search and Controls -->
             <div class="table-controls">
-                <div class="row g-2 align-items-center">
+                <form method="GET" class="row g-2 align-items-center">
+
                     <!-- Search Bar -->
                     <div class="col-md-6 col-lg-5">
                         <div class="search-box">
-                            <i class="fas fa-search search-icon"></i>
-                            <input type="text" 
-                                   class="form-control form-control-sm" 
-                                   placeholder="Search users...">
+                            <input type="text"
+                                class="form-control "
+                                name="q"
+                                value="{{ $q ?? '' }}"
+                                placeholder="Search users..."
+                                autocomplete="off">
                         </div>
                     </div>
 
+                    <!-- Search & Clear Buttons -->
+                    <div class="col-auto d-flex gap-2">
+                        <button class="btn btn-primary btn-sm" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+                        <a class="btn btn-outline-secondary btn-sm" href="{{ route('admin.user.index') }}">Clear</a>
+                    </div>
+
                     <!-- Role Filter -->
-                    <div class="col-md-3 col-lg-3">
-                        <select class="form-select form-select-sm">
-                            <option selected>All Roles</option>
-                            <option>Admin</option>
-                            <option>Owner</option>
-                            <option>Staff</option>
-                            <option>Client</option>
+                    <div class="col-md-3 col-lg-2">
+                        <select class="form-select form-select-sm" name="role" onchange="this.form.submit()">
+                            <option value="">All Roles</option>
+                            <option value="admin"  @selected(($role ?? '') === 'admin')>Admin</option>
+                            <option value="owner"  @selected(($role ?? '') === 'owner')>Owner</option>
+                            <option value="staff"  @selected(($role ?? '') === 'staff')>Staff</option>
+                            <option value="client" @selected(($role ?? '') === 'client')>Client</option>
                         </select>
                     </div>
 
                     <!-- Entries Per Page -->
-                    <div class="col-md-5 col-lg-2">
-                        <select class="form-select form-select-sm">
-                            <option>10 per page</option>
-                            <option>25 per page</option>
-                            <option>50 per page</option>
+                    <div class="col-md-2 col-lg-2 ms-lg-auto">
+                        <select class="form-select form-select-sm" name="per_page" onchange="this.form.submit()">
+                            <option value="10" @selected(($perPage ?? 10) == 10)>10 per page</option>
+                            <option value="25" @selected(($perPage ?? 10) == 25)>25 per page</option>
+                            <option value="50" @selected(($perPage ?? 10) == 50)>50 per page</option>
                         </select>
                     </div>
-                </div>
+
+                </form>
             </div>
 
             <!-- Table -->
@@ -115,13 +124,10 @@
                 <table class="table custom-table mb-0">
                     <thead>
                         <tr>
-                            <th width="5%">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="selectAll">
-                                </div>
-                            </th>
-                            <th width="25%">Name</th>
-                            <th width="25%">Email</th>
+                            
+                            <th>User ID</th>
+                            <th >Name</th>
+                            <th >Email</th>
                             <th width="15%">Phone</th>
                             <th width="12%">Role</th>
                             <th width="10%">Actions</th>
@@ -130,9 +136,10 @@
                     <tbody>
                         @foreach ($users as $user)
                             <tr>
+                                
                                 <td>
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox">
+                                    <div class="user-info">
+                                        <span class="user-name">#00{{ $user->id }}</span>
                                     </div>
                                 </td>
                                 <td>
@@ -174,9 +181,16 @@
 
             <!-- Pagination -->
             <div class="table-footer">
-                <div class="showing-entries">
-                    Showing 1-{{ $users->count() }} of {{ $users->count() }}
-                </div>
+               <div class="showing-entries">
+                {{-- @if ($users->total() > 0)
+                    Showing {{ $users->firstItem() }}-{{ $users->lastItem() }} of {{ $users->total() }}
+                @else
+                    Showing 0 of 0
+                @endif --}}
+            </div>
+            <div>
+                {{-- {{ $users->links() }} --}}
+            </div>
                 <nav>
                     <ul class="pagination mb-0">
                         <li class="page-item disabled">
@@ -199,11 +213,8 @@
 
 </x-app-layout>
 
-<script src="{{asset('assets/js/admin/user/store.js')}}"></script>
-<script src="{{asset('assets/js/admin/user/edit.js')}}"></script>
-<script src="{{asset('assets/js/admin/user/update.js')}}"></script>
-<script src="{{asset('assets/js/admin/user/show.js')}}"></script>
-<script src="{{asset('assets/js/admin/user/delete.js')}}"></script>
+
+<script src="{{asset('assets/js/admin/user/user.js')}}"></script>
 
 
 {{-- Add User Modal --}}

@@ -74,18 +74,19 @@ class SalesReportController extends Controller
 
         // Search across relations
         if ($q !== '') {
-            $query->where(function ($q) use ($q) {
-                $q->whereHas('rental.client', function ($subQuery) use ($q) {
-                    $subQuery->where('name', 'like', "%{$q}%")
-                        ->orWhere('email', 'like', "%{$q}%")
-                        ->orWhere('phone', 'like', "%{$q}%");
+            $searchTerm = $q;
+            $query->where(function ($subQuery) use ($searchTerm) {
+                $subQuery->whereHas('rental.client', function ($clientQuery) use ($searchTerm) {
+                    $clientQuery->where('name', 'like', "%{$searchTerm}%")
+                        ->orWhere('email', 'like', "%{$searchTerm}%")
+                        ->orWhere('phone', 'like', "%{$searchTerm}%");
                 })
-                    ->orWhereHas('rental.car', function ($subQuery) use ($q) {
-                        $subQuery->where('brand', 'like', "%{$q}%")
-                            ->orWhere('model', 'like', "%{$q}%")
-                            ->orWhere('plate_number', 'like', "%{$q}%");
+                    ->orWhereHas('rental.car', function ($carQuery) use ($searchTerm) {
+                        $carQuery->where('brand', 'like', "%{$searchTerm}%")
+                            ->orWhere('model', 'like', "%{$searchTerm}%")
+                            ->orWhere('plate_number', 'like', "%{$searchTerm}%");
                     })
-                    ->orWhere('id', 'like', "%{$q}%");
+                    ->orWhere('id', 'like', "%{$searchTerm}%");
             });
         }
 

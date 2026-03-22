@@ -28,12 +28,13 @@ return new class extends Migration
            
             $table->decimal('final_amount', 10, 2)->default(0);
             $table->enum('status', ['ongoing','pending', 'completed',"cancelled"])->default('pending');
+            $table->dateTime('returned_at')->nullable();
             $table->timestamps();
         });
     }
 
     /**
-     * Reverse the migrations.
+     * Reverse the migrations.a
      */
     public function down(): void
     {
@@ -41,7 +42,5 @@ return new class extends Migration
     }
 
 
-    public function approve(Request $request,$id){
-    
-    }
+
 };

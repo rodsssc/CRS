@@ -174,10 +174,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!res.ok || !data.success) return toastError(data.message || 'Failed to load car.');
 
             const car = data.data;
+            const owner = car.owner || {}; // ← safe fallback so owner.name never throws
 
             const img = document.getElementById('viewCarImage');
             if (img) {
-                img.src = car.image_path ? `/storage/${car.image_path}` : 'https://via.placeholder.com/500x350?text=No+Image';
+                img.src = car.image_path ?
+                    `/storage/${car.image_path}` :
+                    'https://via.placeholder.com/500x350?text=No+Image';
             }
 
             const statusEl = document.getElementById('viewStatus');
@@ -186,24 +189,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 statusEl.className = `status-tag shadow-sm ${statusTagClass(car.status)}`;
             }
 
-            setText('viewYear', car.year, 'N/A');
-            setText('viewCapacity', car.capacity, 'N/A');
-            setText('viewTransmission', car.transmission_type, 'N/A');
-            setText('viewFuelType', car.fuel_type, 'N/A');
+            setText('viewYear', car.year);
+            setText('viewCapacity', car.capacity);
+            setText('viewTransmission', car.transmission_type);
+            setText('viewFuelType', car.fuel_type);
             setText('viewRentalPrice', formatMoney(car.rental_price_per_day), '0.00');
 
-            setText('viewBrand', car.brand, 'N/A');
-            setText('viewPlateNumber', car.plate_number, 'N/A');
-            setText('viewOwnerName', car.owner.name ? 'N/A' : 'N/A');
+            setText('viewBrand', car.brand);
+            setText('viewPlateNumber', car.plate_number);
+            setText('viewOwnerName', owner.name); // ← fixed
 
-            setText('viewPlateNumber2', car.plate_number, 'N/A');
-            setText('viewBrand2', car.brand, 'N/A');
-            setText('viewModel2', car.model, 'N/A');
-            setText('viewColor', car.color, 'N/A');
-            setText('viewYear2', car.year, 'N/A');
-            setText('viewCapacity2', car.capacity, 'N/A');
-            setText('viewTransmission2', car.transmission_type, 'N/A');
-            setText('viewFuelType2', car.fuel_type, 'N/A');
+            setText('viewPlateNumber2', car.plate_number);
+            setText('viewBrand2', car.brand);
+            setText('viewModel2', car.model);
+            setText('viewColor', car.color);
+            setText('viewYear2', car.year);
+            setText('viewCapacity2', car.capacity);
+            setText('viewTransmission2', car.transmission_type);
+            setText('viewFuelType2', car.fuel_type);
 
             if (viewModal) viewModal.show();
             return;

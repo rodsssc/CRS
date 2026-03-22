@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class Payment extends Model
 {
-    /** @use HasFactory<\Database\Factories\PaymentFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -22,36 +21,60 @@ class Payment extends Model
     ];
 
     protected $casts = [
-        'amount' => 'decimal:2',
+        'amount'       => 'decimal:2',
         'payment_date' => 'datetime',
     ];
 
-    /**
-     * The rental/booking this payment belongs to.
-     */
-    public function rental()
+    // =========================================================================
+    // RELATIONSHIPS
+    // =========================================================================
+
+    public function rental(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Rental::class);
     }
 
-    /**
-     * Admin/staff user who processed the payment.
-     */
-    public function processedBy()
+    public function processedBy(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(User::class, 'processed_by');
     }
 
+    // =========================================================================
+    // ACCESSORS
+    // =========================================================================
+
     /**
-     * Platform commission for this payment.
-     *
-     * By default this uses a 20% rate, but it can be adjusted via
-     * app.platform_commission_rate config if needed.
+     * Platform commission for this payment (default 20%).
      */
     public function getCommissionAttribute(): float
     {
         $rate = (float) config('app.platform_commission_rate', 0.20);
-
         return round((float) $this->amount * $rate, 2);
+    }
+
+    // =========================================================================
+    // HELPERS
+    // =========================================================================
+
+    /**
+     * Check whether the rental this payment belongs to is now fully paid.
+     * "Fully paid" = total of all COMPLETED payments >= rental's final_amount.
+     *
+     * NOTE: This does NOT change any booking status — that is intentionally
+     * left to the admin via the "Car Returned" action in BookingController.
+     */
+    public function rentalIsFullyPaid(): bool
+    {
+        $rental = $this->rental;
+
+        if (! $rental || (float) $rental->final_amount <= 0) {
+            return false;
+        }
+
+        $totalPaid = (float) Payment::where('rental_id', $this->rental_id)
+            ->where('status', 'completed')
+            ->sum('amount');
+
+        return $totalPaid >= (float) $rental->final_amount;
     }
 }

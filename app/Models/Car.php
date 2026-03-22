@@ -29,7 +29,13 @@ class Car extends Model
         'rental_price_per_day' => 'decimal:2',
     ];
 
-    public function Owner(){
-        return $this->belongsTo(User::class,'owner_id');
+    public function owner()
+    {
+        return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    public function maintenances()
+    {
+        return $this->hasMany(Maintenance::class);
     }
 }

@@ -1,11 +1,18 @@
-/* app.css - COMPLETE FILE */
+/* app.css */
 
 :root {
     --sidebar-width: 260px;
+    --sidebar-width-collapsed: 72px;
     --color-sidebar: #111827;
     --color-sidebar-foreground: #ffffff;
     --color-sidebar-border: #333333;
-    --client-header-height: 70px;
+    /* cn-height is now defined in client-nav.css */
+    /* kept for any legacy references */
+    --client-header-height: 60px;
+}
+
+html {
+    overflow-x: hidden;
 }
 
 body {
@@ -13,6 +20,16 @@ body {
     overflow-x: hidden;
     margin: 0;
     padding: 0;
+}
+
+.page {
+    overflow-x: hidden;
+    max-width: 100%;
+}
+
+.container,
+.container-fluid {
+    max-width: 100%;
 }
 
 .client-main {
@@ -42,11 +59,35 @@ body {
     color: var(--color-sidebar-foreground);
     border-right: 1px solid var(--color-sidebar-border);
     z-index: 1000;
-    transition: transform 0.3s ease;
+    transition: width 0.3s ease, transform 0.3s ease;
     overflow-y: auto;
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
+}
+
+.sidebar-container.collapsed {
+    width: var(--sidebar-width-collapsed);
+}
+
+.sidebar-container.collapsed .sidebar-section-title,
+.sidebar-container.collapsed .nav-link-minimal span,
+.sidebar-container.collapsed .user-info {
+    display: none;
+}
+
+.sidebar-container.collapsed .nav-link-minimal {
+    justify-content: center;
+    padding: 0.75rem;
+}
+
+.sidebar-container.collapsed .sidebar-brand img {
+    width: 40px;
+    height: 40px;
+}
+
+.sidebar-container.collapsed .user-profile svg {
+    display: none;
 }
 
 .sidebar-nav-wrapper {
@@ -165,9 +206,6 @@ body {
     text-overflow: ellipsis;
 }
 
-
-/* Mobile Toggle Button */
-
 .mobile-menu-toggle {
     position: fixed;
     top: 1rem;
@@ -182,9 +220,6 @@ body {
     color: white;
 }
 
-
-/* Sidebar Overlay */
-
 .sidebar-overlay {
     display: none;
     position: fixed;
@@ -196,30 +231,8 @@ body {
 
 
 /* ================================
-   CLIENT NAVIGATION STYLES
+   ADMIN MAIN CONTENT
    ================================ */
-
-.client-nav {
-    height: var(--client-header-height);
-    background: white;
-    border-bottom: 1px solid #eaeaea;
-    position: fixed;
-    top: 0;
-    width: 100%;
-    z-index: 1000;
-}
-
-.client-nav .container {
-    height: 100%;
-}
-
-
-/* ================================
-   MAIN CONTENT AREAS
-   ================================ */
-
-
-/* Admin Layout */
 
 .admin-main {
     margin-left: var(--sidebar-width);
@@ -229,15 +242,51 @@ body {
     background: #f8f9fa;
 }
 
+body.sidebar-collapsed .admin-main {
+    margin-left: var(--sidebar-width-collapsed);
+}
+
+.sidebar-collapse-toggle {
+    position: fixed;
+    top: 1rem;
+    left: calc(var(--sidebar-width) - 28px);
+    z-index: 1002;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--color-sidebar-border);
+    background: var(--color-sidebar);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: left 0.3s ease, transform 0.2s;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-collapse-toggle:hover {
+    background: #1f2937;
+    color: white;
+}
+
+body.sidebar-collapsed .sidebar-collapse-toggle {
+    left: calc(var(--sidebar-width-collapsed) - 28px);
+}
+
+body.sidebar-collapsed .sidebar-collapse-toggle .collapse-icon {
+    transform: rotate(90deg);
+}
+
 
 /* ================================
-   MOBILE RESPONSIVE
+   ADMIN MOBILE RESPONSIVE
    ================================ */
 
 @media (max-width: 991.98px) {
-    /* Admin Sidebar Mobile */
     .sidebar-container {
         transform: translateX(-100%);
+        width: var(--sidebar-width) !important;
     }
     .sidebar-container.show {
         transform: translateX(0);
@@ -249,15 +298,21 @@ body {
     .mobile-menu-toggle {
         display: block;
     }
+    .sidebar-collapse-toggle {
+        display: none !important;
+    }
     .admin-main {
         margin-left: 0;
         padding-top: 1rem;
+    }
+    body.sidebar-collapsed .admin-main {
+        margin-left: 0;
     }
 }
 
 
 /* ================================
-   DROPDOWN STYLES (for both admin and client)
+   DROPDOWN STYLES (admin)
    ================================ */
 
 .dropdown-menu {
@@ -319,13 +374,83 @@ body {
     box-shadow: 0 .125rem .25rem rgba(0, 0, 0, 0.075) !important;
 }
 
+.btn-bg-color {
+    background-color: black;
+    color: white;
+}
+
+.bg-header {
+    background-color: #000000;
+    color: white;
+}
+
+.bg-gradient {
+    background-color: #4D2FB2;
+}
+
 
 /* ================================
-   PAGE TRANSITIONS
+   SIDEBAR BADGE (pending count)
    ================================ */
+
+.sb-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 50px;
+    background: #e85d26;
+    color: #ffffff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    line-height: 1;
+    margin-left: auto;
+    flex-shrink: 0;
+    /* Subtle pulse to draw attention */
+    animation: sbPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes sbPulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.75;
+    }
+}
+
+
+/* When sidebar is collapsed, badge floats as a dot on the icon */
+
+.sidebar-container.collapsed .sb-badge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    min-width: 14px;
+    height: 14px;
+    padding: 0 3px;
+    font-size: 0.55rem;
+}
+
+
+/* Ensure the nav-link has relative positioning for the collapsed badge */
+
+.sidebar-container.collapsed .nav-link-minimal {
+    position: relative;
+}
 
 .page {
     animation: fadeIn 0.9s ease forwards;
+    box-sizing: border-box;
+}
+
+.client-main .page,
+.admin-main .page {
+    min-width: 0;
 }
 
 .fade-out {
@@ -352,25 +477,4 @@ body {
         opacity: 0;
         transform: translateY(-6px);
     }
-}
-
-.btn-bg-color {
-    background-color: black;
-    color: white;
-}
-
-.bg-header {
-    background-color: #000000;
-    color: white;
-}
-
-.bg-gradient {
-    background-color: #4D2FB2;
-}
-
-.client-header-logo {
-    height: 60px;
-    border-radius: 30px;
-    border: 3px solid #ffffff;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }

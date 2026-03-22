@@ -1,328 +1,450 @@
-// ════════════════════════════════════════════════════════════════
-// BjCarRental - Landing Page (public/assets)
-// - Loads cars for featured + full fleet
-// - Rotates a hero image spotlight (available cars)
-// ════════════════════════════════════════════════════════════════
+/**
+ * ════════════════════════════════════════════════════════════════
+ * BjCarRental · Landing Page — home.js
+ * ════════════════════════════════════════════════════════════════
+ *
+ * Architecture
+ * ────────────
+ *  Config      – URL base injected by Blade via window.LP_CONFIG
+ *  Api         – thin fetch wrappers for /get-cars and /get-cars/stats
+ *  Mock        – offline fallback data (mirrors real API shape)
+ *  Format      – pure formatting helpers (currency, price range)
+ *  Animate     – count-up, progress-bar, shimmer skeletons
+ *  Card        – builds a single car card HTML string
+ *  HeroPanel   – renders the Bootstrap carousel in the hero panel
+ *  StatsStrip  – updates the 4-stat strip
+ *  Fleet       – loads + filters the All Cars grid
+ *  Featured    – loads the Featured Cars grid
+ *  Reveal      – IntersectionObserver scroll-reveal (.lp-r -> .lp-v)
+ *  Init        – DOMContentLoaded bootstrap
+ */
 
-const API_URL = '/get-cars';
+'use strict';
 
-// Logging helpers
-const log = (msg, data) => console.log(`%c[BjCarRental] ${msg}`, 'color: #e85d26; font-weight: bold;', data || '');
-const err = (msg, e) => console.error(`%c[BjCarRental] ${msg}`, 'color: #dc2626; font-weight: bold;', e || '');
+/* ─── Config ─────────────────────────────────────────────────────────────── */
 
-// ───────────────────────────────────────────────────────────────
-// Card Builder
-// ───────────────────────────────────────────────────────────────
-function buildCarCard(car) {
-    const status = car.status || 'available';
-    const statusClass = status === 'available' ? 'lp-badge-av' : status === 'rented' ? 'lp-badge-re' : 'lp-badge-mn';
-    const statusIcon = status === 'available' ? 'fa-circle-check' : status === 'rented' ? 'fa-lock' : 'fa-wrench';
-    const statusText = status.charAt(0).toUpperCase() + status.slice(1);
-    const price = parseFloat(car.rental_price_per_day || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 });
-    const image = car.image_path ? `/storage/${car.image_path}` : null;
-    const carQuery = encodeURIComponent(`${car.brand || ''} ${car.model || ''}`.trim());
+window.LP_CONFIG = window.LP_CONFIG || {
+    carsUrl: '/get-cars',
+    statsUrl: '/get-cars/stats',
+    carUrl: '/client/car',
+};
 
-    return `
-        <div class="lp-card">
-            <div class="lp-card-img">
-                ${image
-                    ? `<img src="${image}" alt="${car.brand} ${car.model}" loading="lazy">`
-                    : `<div class="lp-card-ph"><i class="fa-solid fa-car"></i><span>${car.brand} ${car.model}</span></div>`
-                }
-                <span class="lp-badge ${statusClass}"><i class="fa-solid ${statusIcon}"></i> ${statusText}</span>
-            </div>
-            <div class="lp-card-body">
-                <div class="lp-car-name">${car.brand} ${car.model}</div>
-                <div class="lp-car-meta"><span><i class="fa-solid fa-users"></i> ${car.capacity} Seater</span></div>
-                <div class="lp-price">₱${price}<small> /day</small></div>
-                <a href="/client/car?q=${carQuery}" class="lp-book ${status !== 'available' ? 'lp-unavail' : ''}">
-                    <i class="fa-solid fa-${status === 'available' ? 'calendar-check' : 'ban'}"></i>
-                    ${status === 'available' ? 'Book Now' : 'Unavailable'}
-                </a>
-            </div>
-        </div>
-    `;
-}
+var LP = {
+    url: window.LP_CONFIG,
+    ALL_LIMIT: 9,
+    HERO_LIMIT: 12, // max slides in the hero carousel
+    FEATURED_LIMIT: 4,
+};
 
-// ───────────────────────────────────────────────────────────────
-// Skeleton Loader
-// ───────────────────────────────────────────────────────────────
-function createSkeletons(count) {
-    let html = '';
-    for (let i = 0; i < count; i++) {
-        html += `<div class="lp-skel"><div class="lp-skel-img"></div><div class="lp-skel-body"><div class="lp-skel-line lp-sl-w"></div><div class="lp-skel-line lp-sl-m"></div><div class="lp-skel-line lp-sl-n"></div></div></div>`;
-    }
-    return html;
-}
+/* ─── Api ────────────────────────────────────────────────────────────────── */
 
-// ───────────────────────────────────────────────────────────────
-// Update Available Count (header + hero)
-// ───────────────────────────────────────────────────────────────
-function updateAvailableCount(cars) {
-    const available = (cars || []).filter(c => c.status === 'available').length;
-    const statEls = document.querySelectorAll('#lpStatAvail, #lpHeroAvail');
-    statEls.forEach(el => el.textContent = available);
-    return available;
-}
+var Api = (function() {
 
-// ───────────────────────────────────────────────────────────────
-// Fetch Cars
-// ───────────────────────────────────────────────────────────────
-async function fetchCars(params = {}) {
-    const queryString = new URLSearchParams(params).toString();
-    const url = queryString ? `${API_URL}?${queryString}` : API_URL;
+    function getCars(params) {
+        params = params || {};
+        var url = new URL(LP.url.carsUrl, location.origin);
+        if (params.status) url.searchParams.set('status', params.status);
+        if (params.capacity) url.searchParams.set('capacity', params.capacity);
+        if (params.limit) url.searchParams.set('limit', params.limit);
 
-    try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
-
-        if (!data.success) throw new Error('Invalid response');
-
-        return {
-            cars: data.data || [],
-            error: null,
-        };
-    } catch (e) {
-        err('Failed to fetch cars', e);
-        return {
-            cars: [],
-            error: e,
-        };
-    }
-}
-
-// ───────────────────────────────────────────────────────────────
-// Hero Spotlight (image rotation)
-// ───────────────────────────────────────────────────────────────
-let heroCars = [];
-let heroIndex = 0;
-let heroTimer = null;
-
-function setHeroCar(car) {
-    const spotlight = document.getElementById('lpHeroSpotlight');
-    const img = document.getElementById('lpHeroCarImg');
-    const nameEl = document.getElementById('lpHeroCarName');
-    const metaEl = document.getElementById('lpHeroCarMeta');
-    const priceEl = document.getElementById('lpHeroCarPrice');
-    const linkEl = document.getElementById('lpHeroCarLink');
-
-    if (!spotlight || !img || !nameEl || !metaEl || !priceEl || !linkEl) return;
-    if (!car) {
-        spotlight.style.display = 'none';
-        return;
-    }
-
-    spotlight.style.display = '';
-
-    const title = `${car.brand || ''} ${car.model || ''}`.trim() || 'Available Car';
-    const year = car.year ? `${car.year}` : '';
-    const seats = car.capacity ? `${car.capacity} seater` : '';
-    const meta = [year, seats].filter(Boolean).join(' • ') || 'Ready for booking';
-    const price = parseFloat(car.rental_price_per_day || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 });
-    const imgSrc = car.image_path ? `/storage/${car.image_path}` : '';
-
-    nameEl.textContent = title;
-    metaEl.textContent = meta;
-    priceEl.textContent = `₱${price} / day`;
-
-    const carQuery = encodeURIComponent(title);
-    linkEl.href = `/client/car?q=${carQuery}`;
-
-    if (imgSrc) {
-        img.style.opacity = '0.25';
-        img.src = imgSrc;
-        img.onload = () => { img.style.opacity = '1'; };
-        img.onerror = () => { img.style.opacity = '1'; };
-    }
-}
-
-function startHeroRotation(cars) {
-    heroCars = (cars || []).filter(c => c.status === 'available' && c.image_path);
-    heroIndex = 0;
-
-    if (heroTimer) {
-        clearInterval(heroTimer);
-        heroTimer = null;
-    }
-
-    if (heroCars.length === 0) {
-        setHeroCar(null);
-        return;
-    }
-
-    setHeroCar(heroCars[0]);
-
-    // Rotate every 8 seconds (simple + readable)
-    heroTimer = setInterval(() => {
-        heroIndex = (heroIndex + 1) % heroCars.length;
-        setHeroCar(heroCars[heroIndex]);
-    }, 8000);
-}
-
-// ───────────────────────────────────────────────────────────────
-// Load Featured Cars
-// ───────────────────────────────────────────────────────────────
-async function loadFeatured() {
-    const featGrid = document.getElementById('lpFeatGrid');
-    if (!featGrid) return;
-
-    log('Loading featured cars...');
-    featGrid.innerHTML = createSkeletons(4);
-
-    const { cars, error } = await fetchCars({ limit: 4, status: 'available' });
-
-    if (error) {
-        featGrid.innerHTML = '<p style="text-align:center;color:#dc2626;">Unable to load featured cars right now. Please try again in a moment.</p>';
-        return;
-    }
-
-    if (cars.length > 0) {
-        featGrid.innerHTML = cars.map(buildCarCard).join('');
-        log('Featured cars loaded', cars.length);
-    } else {
-        featGrid.innerHTML = '<p style="text-align:center;color:#999;">No featured cars available</p>';
-    }
-}
-
-// ───────────────────────────────────────────────────────────────
-// Load All Cars
-// ───────────────────────────────────────────────────────────────
-async function loadAllCars() {
-    const allGrid = document.getElementById('lpAllGrid');
-    if (!allGrid) return;
-
-    const status = document.getElementById('lpStatus')?.value || '';
-    const capacity = document.getElementById('lpCapacity')?.value || '';
-    const sort = document.getElementById('lpSort')?.value || '';
-
-    log('Loading all cars', { status, capacity, sort });
-    allGrid.innerHTML = createSkeletons(6);
-
-    const params = {};
-    if (status) params.status = status;
-    if (capacity) params.capacity = capacity;
-
-    const { cars, error } = await fetchCars(params);
-
-    if (error) {
-        allGrid.innerHTML = '<p style="text-align:center;color:#dc2626;">Unable to load cars. Please check your connection and try again.</p>';
-        updateAvailableCount([]);
-        return;
-    }
-
-    if (cars.length === 0) {
-        allGrid.innerHTML = '<p style="text-align:center;color:#999;">No cars match your filters</p>';
-        updateAvailableCount([]);
-        return;
-    }
-
-    if (sort === 'price_asc') {
-        cars.sort((a, b) => (a.rental_price_per_day || 0) - (b.rental_price_per_day || 0));
-    } else if (sort === 'price_desc') {
-        cars.sort((a, b) => (b.rental_price_per_day || 0) - (a.rental_price_per_day || 0));
-    } else if (sort === 'capacity') {
-        cars.sort((a, b) => (a.capacity || 0) - (b.capacity || 0));
-    }
-
-    allGrid.innerHTML = cars.map(buildCarCard).join('');
-    updateAvailableCount(cars);
-    log('All cars loaded', cars.length);
-}
-
-// ───────────────────────────────────────────────────────────────
-// Search (used by hero search bar)
-// ───────────────────────────────────────────────────────────────
-function doSearch() {
-    const query = document.getElementById('lpSearch')?.value.trim().toLowerCase() || '';
-    if (!query) return;
-
-    const fleetSection = document.getElementById('lp-fleet');
-    if (fleetSection) {
-        fleetSection.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    setTimeout(() => {
-        const cards = document.querySelectorAll('#lpAllGrid .lp-card');
-        cards.forEach(card => {
-            const name = card.querySelector('.lp-car-name')?.textContent.toLowerCase() || '';
-            const match = name.includes(query);
-            card.style.opacity = match ? '1' : '0.3';
-            card.style.transform = match ? 'none' : 'scale(0.97)';
-            card.style.transition = 'opacity 0.3s, transform 0.3s';
-        });
-    }, 600);
-}
-
-// Blade uses onclick="lpDoSearch()"
-window.lpDoSearch = doSearch;
-
-// ───────────────────────────────────────────────────────────────
-// Event Listeners
-// ───────────────────────────────────────────────────────────────
-function setupEventListeners() {
-    const searchInput = document.getElementById('lpSearch');
-    if (searchInput) {
-        searchInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') doSearch();
-        });
-    }
-
-    const applyBtn = document.getElementById('lpApply');
-    const resetBtn = document.getElementById('lpReset');
-    const statusSel = document.getElementById('lpStatus');
-    const capacitySel = document.getElementById('lpCapacity');
-    const sortSel = document.getElementById('lpSort');
-
-    if (applyBtn) applyBtn.addEventListener('click', loadAllCars);
-    if (statusSel) statusSel.addEventListener('change', loadAllCars);
-    if (capacitySel) capacitySel.addEventListener('change', loadAllCars);
-    if (sortSel) sortSel.addEventListener('change', loadAllCars);
-
-    if (resetBtn) {
-        resetBtn.addEventListener('click', () => {
-            if (statusSel) statusSel.value = '';
-            if (capacitySel) capacitySel.value = '';
-            if (sortSel) sortSel.value = '';
-            document.querySelectorAll('#lpAllGrid .lp-card').forEach(c => {
-                c.style.opacity = '1';
-                c.style.transform = 'none';
+        return fetch(url)
+            .then(function(res) { return res.json(); })
+            .then(function(json) {
+                if (!json.success) throw new Error('API returned success:false');
+                return json.data || [];
             });
-            loadAllCars();
-        });
     }
-}
 
-// ───────────────────────────────────────────────────────────────
-// Scroll Reveal Animation
-// ───────────────────────────────────────────────────────────────
-function setupScrollReveal() {
-    const observer = new IntersectionObserver(
-        entries => entries.forEach(e => {
-            if (e.isIntersecting) e.target.classList.add('lp-v');
-        }),
-        { threshold: 0.08 }
-    );
+    function getStats() {
+        return fetch(LP.url.statsUrl)
+            .then(function(res) { return res.json(); })
+            .then(function(json) {
+                if (!json.success) throw new Error('Stats API returned success:false');
+                return json.data || {};
+            });
+    }
 
-    document.querySelectorAll('.lp-r').forEach(el => observer.observe(el));
-}
+    return { getCars: getCars, getStats: getStats };
 
-// ───────────────────────────────────────────────────────────────
-// Initialize
-// ───────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', async () => {
-    log('Initializing landing page...');
+})();
 
-    setupEventListeners();
-    setupScrollReveal();
+/* ─── Mock ───────────────────────────────────────────────────────────────── */
 
-    await loadFeatured();
-    await loadAllCars();
+var Mock = (function() {
 
-    // Hero spotlight: only available cars (with images) rotate
-    const { cars: availableForHero } = await fetchCars({ status: 'available', limit: 12 });
-    startHeroRotation(availableForHero);
+    var CARS = [
+        { id: 1, brand: 'Toyota', model: 'Vios', capacity: 5, status: 'available', rental_price_per_day: 1800, image_path: null },
+        { id: 2, brand: 'Honda', model: 'City', capacity: 5, status: 'available', rental_price_per_day: 1950, image_path: null },
+        { id: 3, brand: 'Mitsubishi', model: 'Montero', capacity: 7, status: 'rented', rental_price_per_day: 3200, image_path: null },
+        { id: 4, brand: 'Ford', model: 'EcoSport', capacity: 5, status: 'available', rental_price_per_day: 2400, image_path: null },
+        { id: 5, brand: 'Hyundai', model: 'Accent', capacity: 5, status: 'maintenance', rental_price_per_day: 1600, image_path: null },
+        { id: 6, brand: 'Nissan', model: 'Navara', capacity: 5, status: 'available', rental_price_per_day: 2800, image_path: null },
+        { id: 7, brand: 'Suzuki', model: 'Ertiga', capacity: 7, status: 'available', rental_price_per_day: 2200, image_path: null },
+        { id: 8, brand: 'Kia', model: 'Sportage', capacity: 5, status: 'rented', rental_price_per_day: 2900, image_path: null },
+    ];
 
-    log('Landing page ready');
+    function getCars(params) {
+        params = params || {};
+        var list = params.status ?
+            CARS.filter(function(c) { return c.status === params.status; }) :
+            CARS;
+        return list.slice(0, params.limit || CARS.length);
+    }
+
+    function getStats() {
+        var available = CARS.filter(function(c) { return c.status === 'available'; }).length;
+        var rented = CARS.filter(function(c) { return c.status === 'rented'; }).length;
+        var unavailable = CARS.filter(function(c) { return c.status === 'unavailable'; }).length;
+        var maintenance = CARS.filter(function(c) { return c.status === 'maintenance'; }).length;
+        var total = CARS.length;
+        var prices = CARS.filter(function(c) { return c.status === 'available'; })
+            .map(function(c) { return c.rental_price_per_day; });
+
+        return {
+            total: total,
+            available: available,
+            rented: rented,
+            unavailable: unavailable,
+            maintenance: maintenance,
+            available_pct: Math.round((available / total) * 100),
+            price_min: Math.min.apply(null, prices),
+            price_max: Math.max.apply(null, prices),
+            happy_customers: 1000,
+        };
+    }
+
+    return { getCars: getCars, getStats: getStats };
+
+})();
+
+/* ─── Format ─────────────────────────────────────────────────────────────── */
+
+var Format = {
+
+    price: function(value) {
+        return parseFloat(value || 0).toLocaleString('en-PH', { minimumFractionDigits: 2 });
+    },
+
+    priceRange: function(min, max) {
+        if (!min && !max) return '&#8212;';
+        if (min === max) return '&#8369;' + this.price(min);
+        return '&#8369;' + this.price(min) + '<br><small>to &#8369;' + this.price(max) + '</small>';
+    },
+};
+
+/* ─── Animate ────────────────────────────────────────────────────────────── */
+
+var Animate = {
+
+    countUp: function(el, target, suffix) {
+        if (!el || isNaN(target)) return;
+        suffix = suffix || '';
+        var DURATION = 1400;
+        var start = performance.now();
+
+        function tick(now) {
+            var t = Math.min((now - start) / DURATION, 1);
+            var eased = 1 - Math.pow(1 - t, 3);
+            el.textContent = Math.round(target * eased).toLocaleString('en-PH') + suffix;
+            if (t < 1) { requestAnimationFrame(tick); }
+        }
+        requestAnimationFrame(tick);
+    },
+
+    progressBar: function(barEl, pctEl, pct) {
+        if (!barEl) return;
+        var DURATION = 1000;
+        setTimeout(function() {
+            barEl.style.width = pct + '%';
+            var start = performance.now();
+
+            function tick(now) {
+                var t = Math.min((now - start) / DURATION, 1);
+                if (pctEl) { pctEl.textContent = Math.round(pct * t) + '%'; }
+                if (t < 1) { requestAnimationFrame(tick); }
+            }
+            requestAnimationFrame(tick);
+        }, 100);
+    },
+
+    skeletons: function(n) {
+        var one = '<div class="lp-skel">' +
+            '<div class="lp-skel-img"></div>' +
+            '<div class="lp-skel-body">' +
+            '<div class="lp-skel-line lp-sl-w"></div>' +
+            '<div class="lp-skel-line lp-sl-m"></div>' +
+            '<div class="lp-skel-line lp-sl-n"></div>' +
+            '</div></div>';
+        var html = '';
+        for (var i = 0; i < n; i++) { html += one; }
+        return html;
+    },
+};
+
+/* ─── Card ───────────────────────────────────────────────────────────────── */
+
+var Card = {
+
+    STATUS: {
+        available: { cls: 'lp-badge-av', icon: 'fa-circle-check', label: 'Available' },
+        rented: { cls: 'lp-badge-re', icon: 'fa-lock', label: 'Rented' },
+        maintenance: { cls: 'lp-badge-mn', icon: 'fa-wrench', label: 'Maintenance' },
+        unavailable: { cls: 'lp-badge-un', icon: 'fa-circle-xmark', label: 'Unavailable' },
+    },
+
+    build: function(car) {
+        var badge = this.STATUS[car.status] || this.STATUS.maintenance;
+        var imgSrc = car.image_path ? '/storage/' + car.image_path : null;
+        var isAvail = car.status === 'available';
+
+        var imgHtml = imgSrc ?
+            '<img src="' + imgSrc + '" alt="' + car.brand + ' ' + car.model + '" loading="lazy" decoding="async">' :
+            '<div class="lp-card-ph">' +
+            '<i class="fa-solid fa-car"></i>' +
+            '<span>' + car.brand + ' ' + car.model + '</span>' +
+            '</div>';
+
+        var bookClass = isAvail ? 'lp-book' : 'lp-book lp-unavail';
+        var bookIcon = isAvail ? 'fa-calendar-check' : 'fa-ban';
+        var bookLabel = isAvail ? 'Book Now' : 'Unavailable';
+
+        return '<div class="lp-card">' +
+            '<div class="lp-card-img">' + imgHtml +
+            '<span class="lp-badge ' + badge.cls + '">' +
+            '<i class="fa-solid ' + badge.icon + '"></i> ' + badge.label +
+            '</span></div>' +
+            '<div class="lp-card-body">' +
+            '<div class="lp-car-name">' + car.brand + ' ' + car.model + '</div>' +
+            '<div class="lp-car-meta"><span><i class="fa-solid fa-users"></i> ' + car.capacity + ' Seater</span></div>' +
+            '<div class="lp-price">&#8369;' + Format.price(car.rental_price_per_day) + '<small> /day</small></div>' +
+            '<a href="' + LP.url.carUrl + '?car_id=' + car.id + '" class="' + bookClass + '">' +
+            '<i class="fa-solid ' + bookIcon + '"></i> ' + bookLabel +
+            '</a></div></div>';
+    },
+
+    renderGrid: function(gridEl, cars) {
+        var html = '';
+        for (var i = 0; i < cars.length; i++) { html += this.build(cars[i]); }
+        gridEl.innerHTML = html;
+    },
+};
+
+/* ─── HeroPanel — Bootstrap Carousel ─────────────────────────────────────── */
+
+var HeroPanel = {
+
+    STATUS_BADGE: {
+        available: { cls: 'lp-carousel-badge-av', icon: 'fa-circle-check', label: 'Available' },
+        rented: { cls: 'lp-carousel-badge-re', icon: 'fa-lock', label: 'Rented' },
+        maintenance: { cls: 'lp-carousel-badge-mn', icon: 'fa-wrench', label: 'Maintenance' },
+        unavailable: { cls: 'lp-carousel-badge-un', icon: 'fa-circle-xmark', label: 'Unavailable' },
+    },
+
+    /**
+     * Fetch all cars (any status), then build Bootstrap carousel slides.
+     * Each slide shows the car image + a status badge + name + price overlay.
+     */
+    render: function() {
+        var self = this;
+
+        Api.getCars({ limit: LP.HERO_LIMIT })
+            .then(function(cars) {
+                self._build(cars.length ? cars : Mock.getCars({ limit: LP.HERO_LIMIT }));
+            })
+            .catch(function() {
+                self._build(Mock.getCars({ limit: LP.HERO_LIMIT }));
+            });
+    },
+
+    /** @private — builds carousel HTML and reveals it */
+    _build: function(cars) {
+        var innerEl = document.getElementById('lpCarouselInner');
+        var carousel = document.getElementById('lpHeroCarousel');
+        var skeleton = document.getElementById('lpCarouselSkeleton');
+
+        if (!innerEl || !carousel) return;
+
+        var html = '';
+
+        for (var i = 0; i < cars.length; i++) {
+            var car = cars[i];
+            var badge = this.STATUS_BADGE[car.status] || this.STATUS_BADGE.maintenance;
+            var imgSrc = car.image_path ? '/storage/' + car.image_path : null;
+            var active = i === 0 ? ' active' : '';
+            // Auto-advance: 4 s for first slide, 3 s for the rest
+            var interval = i === 0 ? '4000' : '3000';
+
+            var imgContent = imgSrc ?
+                '<img src="' + imgSrc + '" class="d-block w-100 lp-carousel-img" alt="' + car.brand + ' ' + car.model + '" loading="lazy">' :
+                '<div class="lp-carousel-placeholder">' +
+                '<i class="fa-solid fa-car"></i>' +
+                '<span>' + car.brand + ' ' + car.model + '</span>' +
+                '</div>';
+
+            html += '<div class="carousel-item' + active + '" data-bs-interval="' + interval + '">' +
+                imgContent +
+                // Dark gradient overlay
+                '<div class="lp-carousel-overlay"></div>' +
+                // Status badge (top-left)
+                '<span class="lp-carousel-badge ' + badge.cls + '">' +
+                '<i class="fa-solid ' + badge.icon + '"></i> ' + badge.label +
+                '</span>' +
+                // Caption (bottom)
+                '<div class="lp-carousel-caption">' +
+                '<div class="lp-carousel-name">' + car.brand + ' ' + car.model + '</div>' +
+                '<div class="lp-carousel-price">&#8369;' + Format.price(car.rental_price_per_day) + '<small>/day</small></div>' +
+                '</div>' +
+                '</div>';
+        }
+
+        innerEl.innerHTML = html;
+
+        // Hide skeleton, show carousel
+        if (skeleton) { skeleton.style.display = 'none'; }
+        carousel.classList.remove('d-none');
+    },
+};
+
+/* ─── StatsStrip ─────────────────────────────────────────────────────────── */
+
+var StatsStrip = {
+
+    setAvailable: function(count) {
+        var el = document.getElementById('lpStatAvail');
+        if (el) { Animate.countUp(el, count); }
+    },
+
+    setCustomers: function(count) {
+        var el = document.getElementById('lpStatCustomers');
+        if (el) { Animate.countUp(el, count, '+'); }
+    },
+};
+
+/* ─── Fleet ──────────────────────────────────────────────────────────────── */
+
+var Fleet = {
+
+    _readFilters: function() {
+        var statusEl = document.getElementById('lpStatus');
+        var capacityEl = document.getElementById('lpCapacity');
+        var sortEl = document.getElementById('lpSort');
+        return {
+            status: statusEl ? statusEl.value : '',
+            capacity: capacityEl ? capacityEl.value : '',
+            sort: sortEl ? sortEl.value : '',
+        };
+    },
+
+    _sort: function(cars, sort) {
+        var list = cars.slice();
+        if (sort === 'price_asc') { list.sort(function(a, b) { return a.rental_price_per_day - b.rental_price_per_day; }); }
+        if (sort === 'price_desc') { list.sort(function(a, b) { return b.rental_price_per_day - a.rental_price_per_day; }); }
+        if (sort === 'capacity') { list.sort(function(a, b) { return a.capacity - b.capacity; }); }
+        return list;
+    },
+
+    load: function() {
+        var self = this;
+        var filters = this._readFilters();
+        var gridEl = document.getElementById('lpAllGrid');
+        if (!gridEl) return;
+
+        gridEl.innerHTML = Animate.skeletons(6);
+
+        Api.getCars({ status: filters.status, capacity: filters.capacity, limit: LP.ALL_LIMIT })
+            .then(function(raw) {
+                var cars = self._sort(raw, filters.sort);
+                cars.length ? Card.renderGrid(gridEl, cars) : (gridEl.innerHTML = self._emptyState());
+            })
+            .catch(function() {
+                Card.renderGrid(gridEl, self._sort(Mock.getCars({ status: filters.status, limit: LP.ALL_LIMIT }), filters.sort));
+            });
+    },
+
+    reset: function() {
+        ['lpStatus', 'lpCapacity', 'lpSort'].forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) { el.value = ''; }
+        });
+        this.load();
+    },
+
+    _emptyState: function() {
+        return '<div class="lp-empty" style="grid-column:1/-1;text-align:center;padding:3rem 1rem;color:var(--text-muted)">' +
+            '<i class="fa-solid fa-car-burst" style="font-size:2.5rem;margin-bottom:.75rem;display:block;opacity:.3"></i>' +
+            '<p style="font-weight:500">No vehicles match your filters.</p>' +
+            '<p style="font-size:.85rem;margin-top:.25rem">Try adjusting your search criteria.</p>' +
+            '</div>';
+    },
+};
+
+/* ─── Featured ───────────────────────────────────────────────────────────── */
+
+var Featured = {
+
+    load: function() {
+        var gridEl = document.getElementById('lpFeatGrid');
+        if (!gridEl) return;
+
+        Api.getCars({ status: 'available', limit: LP.FEATURED_LIMIT })
+            .then(function(cars) {
+                Card.renderGrid(gridEl, cars.length ? cars : Mock.getCars({ status: 'available', limit: LP.FEATURED_LIMIT }));
+            })
+            .catch(function() {
+                Card.renderGrid(gridEl, Mock.getCars({ status: 'available', limit: LP.FEATURED_LIMIT }));
+            });
+    },
+};
+
+/* ─── Reveal ─────────────────────────────────────────────────────────────── */
+
+var Reveal = {
+
+    init: function() {
+        var obs = new IntersectionObserver(function(entries) {
+            for (var i = 0; i < entries.length; i++) {
+                if (entries[i].isIntersecting) { entries[i].target.classList.add('lp-v'); }
+            }
+        }, { threshold: 0.08 });
+
+        var targets = document.querySelectorAll('.lp-r');
+        for (var i = 0; i < targets.length; i++) { obs.observe(targets[i]); }
+    },
+};
+
+/* ─── Init ───────────────────────────────────────────────────────────────── */
+
+document.addEventListener('DOMContentLoaded', function() {
+
+    Reveal.init();
+
+    // Stats strip — no longer drives the hero panel
+    Api.getStats()
+        .then(function(stats) {
+            StatsStrip.setAvailable(stats.available || 0);
+            StatsStrip.setCustomers(stats.happy_customers || 0);
+        })
+        .catch(function() {
+            var stats = Mock.getStats();
+            StatsStrip.setAvailable(stats.available);
+            StatsStrip.setCustomers(stats.happy_customers);
+        });
+
+    // Hero carousel — fetches all cars independently
+    HeroPanel.render();
+
+    // Car grids
+    Featured.load();
+    Fleet.load();
+
+    // Filter controls
+    var applyBtn = document.getElementById('lpApply');
+    var resetBtn = document.getElementById('lpReset');
+    if (applyBtn) { applyBtn.addEventListener('click', function() { Fleet.load(); }); }
+    if (resetBtn) { resetBtn.addEventListener('click', function() { Fleet.reset(); }); }
+
+    ['lpStatus', 'lpCapacity', 'lpSort'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) { el.addEventListener('change', function() { Fleet.load(); }); }
+    });
 });
-

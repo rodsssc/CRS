@@ -27,7 +27,7 @@ class DashboardController extends Controller
 
         $recentBookings = Rental::with(['client', 'car'])
             ->orderByDesc('created_at')
-            ->limit(8)
+            ->limit(5)
             ->get();
 
         $carStatusCounts = Car::selectRaw('status, COUNT(*) as total')

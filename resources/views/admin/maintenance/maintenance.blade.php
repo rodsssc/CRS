@@ -72,55 +72,60 @@
         <!-- Table Card -->
         <div class="table-card">
             <div class="table-controls">
-                <form method="GET" class="row g-2 align-items-center">
-                    <div class="col-md-6 col-lg-5">
-                        <div class="search-box">
-                            <i class="fas fa-search search-icon"></i>
-                            <input type="text"
-                                   class="form-control form-control-sm"
-                                   name="q"
-                                   value="{{ $q ?? '' }}"
-                                   placeholder="Search plate, title, creator..."
-                                   autocomplete="off">
-                        </div>
+            <form method="GET" class="row g-2 align-items-center">
+
+                {{-- Search --}}
+                <div class="col-12 col-md-5 col-lg-4">
+                    <div class="search-box">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text"
+                            class="form-control form-control-sm"
+                            name="q"
+                            value="{{ $q ?? '' }}"
+                            placeholder="Search plate, title, creator..."
+                            autocomplete="off">
                     </div>
-                    <div class="col-md-3 col-lg-3">
-                        <select class="form-select form-select-sm" name="status" onchange="this.form.submit()">
-                            <option value="">All Status</option>
-                            <option value="scheduled" @selected(($status ?? '') === 'scheduled')>Scheduled</option>
-                            <option value="in_progress" @selected(($status ?? '') === 'in_progress')>In Progress</option>
-                            <option value="completed" @selected(($status ?? '') === 'completed')>Completed</option>
-                            <option value="cancelled" @selected(($status ?? '') === 'cancelled')>Cancelled</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3 col-lg-3">
-                        <select class="form-select form-select-sm" name="car_id" onchange="this.form.submit()">
-                            <option value="">All Cars</option>
-                            @foreach($cars as $car)
-                                <option value="{{ $car->id }}" @selected(($carId ?? null) == $car->id)>
-                                    {{ $car->plate_number }} — {{ $car->brand }} {{ $car->model }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-md-5 col-lg-2">
-                        <select class="form-select form-select-sm" name="per_page" onchange="this.form.submit()">
-                            <option value="10" @selected(($perPage ?? 10) == 10)>10 / page</option>
-                            <option value="25" @selected(($perPage ?? 10) == 25)>25 / page</option>
-                            <option value="50" @selected(($perPage ?? 10) == 50)>50 / page</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3 col-lg-2 d-flex gap-2 justify-content-md-end">
-                        <button class="btn btn-primary btn-sm px-3" type="submit">Search</button>
-                        <a class="btn btn-outline-secondary btn-sm px-3" href="{{ route('admin.maintenance.index') }}">Clear</a>
-                    </div>
-                </form>
-            </div>
+                </div>
+
+                {{-- Search & Clear --}}
+                <div class="col-auto d-flex gap-2">
+                    <button class="btn btn-primary btn-sm" type="submit">Search</button>
+                    <a class="btn btn-outline-secondary btn-sm" href="{{ route('admin.payment.index') }}">Clear</a>
+                </div>
+
+                {{-- Status Filter --}}
+                <div class="col-12 col-md-3 col-lg-2">
+                    <select class="form-select form-select-sm" name="status" onchange="this.form.submit()">
+                        <option value="">All Status</option>
+                        <option value="scheduled"   @selected(($status ?? '') === 'scheduled')>Scheduled</option>
+                        <option value="in_progress" @selected(($status ?? '') === 'in_progress')>In Progress</option>
+                        <option value="completed"   @selected(($status ?? '') === 'completed')>Completed</option>
+                        <option value="cancelled"   @selected(($status ?? '') === 'cancelled')>Cancelled</option>
+                    </select>
+                </div>
+
+                {{-- Car Filter --}}
+                <div class="col-12 col-md-3 col-lg-3">
+                    <select class="form-select form-select-sm" name="car_id" onchange="this.form.submit()">
+                        <option value="">All Cars</option>
+                        @foreach($cars as $car)
+                            <option value="{{ $car->id }}" @selected(($carId ?? null) == $car->id)>
+                                {{ $car->plate_number }} — {{ $car->brand }} {{ $car->model }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+
+              
+            </form>
+        </div>
 
             <div class="table-responsive">
                 <table class="table custom-table mb-0">
                     <thead>
+                        
                         <tr>
+                            <th>Car ID</th>
                             <th>Car</th>
                             <th>Plate</th>
                             <th>Service Date</th>
@@ -134,6 +139,7 @@
                     <tbody>
                         @forelse ($maintenances as $m)
                             <tr>
+                                <td class="text-muted">#00{{ $m->car?->id }} </td>
                                 <td class="text-muted">{{ $m->car?->brand }} {{ $m->car?->model }}</td>
                                 <td class="text-muted">{{ $m->car?->plate_number ?? '—' }}</td>
                                 <td class="text-muted">{{ $m->service_date?->format('M d, Y') ?? '—' }}</td>
@@ -258,8 +264,8 @@
             </div>
 
             <div class="modal-footer border-0 bg-white px-4 pb-4 pt-2 gap-2">
-                <button type="button" class="btn btn-secondary btn-sm px-4" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary btn-sm px-4" id="saveMaintenanceBtn">Create</button>
+                <button type="button" class="btn btn-secondary " data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-bg-color " id="saveMaintenanceBtn">Create</button>
             </div>
         </div>
     </div>

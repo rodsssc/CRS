@@ -308,3 +308,48 @@ body {
     height: 100%;
     border-radius: 50%;
 }
+
+
+/* ─── Responsive ─────────────────────────── */
+
+
+/* Tablet: tighten padding, fix logo overflow */
+
+@media (max-width: 600px) {
+    .main-container {
+        padding: 24px 16px;
+    }
+    .form-container {
+        padding: 32px 24px;
+    }
+    /* Remove negative margin that causes overflow on small screens */
+    .card-logo {
+        margin-top: 0;
+    }
+}
+
+
+/* Mobile: stack 2-col rows, prevent iOS zoom */
+
+@media (max-width: 480px) {
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+    /* font-size 16px prevents iOS Safari from zooming on input focus */
+    .input {
+        font-size: 16px;
+    }
+    .form-container {
+        padding: 28px 20px;
+    }
+}
+
+
+/* Very small phones (320px) */
+
+@media (max-width: 360px) {
+    .form-container {
+        padding: 24px 16px;
+    }
+}

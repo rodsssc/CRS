@@ -1,223 +1,281 @@
 <x-app-layout>
-    <div class="container">
-        <div class="header-container mb-4">
-            <div class="filter-bar">
 
-                <!-- Search + Controls Row -->
-                <div class="row g-2 align-items-center mb-3">
-                    <div class="col-12 col-md">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white border-end-0">
-                                <i class="fa-solid fa-magnifying-glass text-muted"></i>
-                            </span>
-                            <input type="text" class="form-control border-start-0 ps-0" placeholder="Search by brand, model...">
-                        </div>
-                    </div>
-                    
-                    <div class="col-auto">
-                        <button class="btn btn-dark px-4">
-                            <i class="fa-solid fa-magnifying-glass me-1"></i> Search
-                        </button>
-                    </div>
-                    <div class="col-12 col-md-auto">
-                        <select class="form-select" aria-label="Select availability">
-                            <option selected value="">All Status</option>
-                            <option value="available">Available</option>
-                            <option value="unavailable">Unavailable</option>
-                        </select>
-                    </div>
-                </div>
+{{--
+    ════════════════════════════════════════════════════════════════
+    BjCarRental · Client Car Listing
+    ════════════════════════════════════════════════════════════════
+    All filtering, search, pagination, view + booking are handled
+    by assets/js/client/car/car.js — no page reload needed.
+    ════════════════════════════════════════════════════════════════
+--}}
 
-                <!-- Seater Capacity Row -->
-                <div class="d-flex flex-wrap align-items-center gap-2">
-                    <span class="text-muted small me-1">
-                        <i class="bi bi-people-fill me-1"></i>Seater:
-                    </span>
+<div class="cr-page">
 
-                    <input type="radio" class="btn-check" name="seater" id="seater-all" value="" checked>
-                    <label class="seater-card" for="seater-all">All</label>
-
-                    <input type="radio" class="btn-check" name="seater" id="seater-2" value="2">
-                    <label class="seater-card" for="seater-2">
-                        <i class="bi bi-person-fill"></i> 2
-                    </label>
-
-                    <input type="radio" class="btn-check" name="seater" id="seater-4" value="4">
-                    <label class="seater-card" for="seater-4">
-                        <i class="bi bi-person-fill"></i> 4
-                    </label>
-
-                    <input type="radio" class="btn-check" name="seater" id="seater-5" value="5">
-                    <label class="seater-card" for="seater-5">
-                        <i class="bi bi-person-fill"></i> 5
-                    </label>
-
-                    <input type="radio" class="btn-check" name="seater" id="seater-6" value="6">
-                    <label class="seater-card" for="seater-6">
-                        <i class="bi bi-person-fill"></i> 6
-                    </label>
-
-                    <input type="radio" class="btn-check" name="seater" id="seater-7" value="7">
-                    <label class="seater-card" for="seater-7">
-                        <i class="bi bi-person-fill"></i> 7
-                    </label>
-
-                    <input type="radio" class="btn-check" name="seater" id="seater-8" value="8">
-                    <label class="seater-card" for="seater-8">
-                        <i class="bi bi-person-fill"></i> 8
-                    </label>
-
-                    <input type="radio" class="btn-check" name="seater" id="seater-10" value="10">
-                    <label class="seater-card" for="seater-10">
-                        <i class="bi bi-person-fill"></i> 10+
-                    </label>
-
-                </div>
-
+    {{-- ══════════════════════════════════════════════════════════
+         PAGE HEADER
+         ══════════════════════════════════════════════════════════ --}}
+    <div class="cr-page-header">
+        <div class="cr-page-header-inner">
+            <div>
+                <h1 class="cr-page-title">Browse Fleet</h1>
+                <p class="cr-page-sub">Find the perfect vehicle for your next journey</p>
             </div>
-        </div>
-
-        <div class="body-container">
-            <div class="row g-4">
-                <!-- Repeat cards as needed -->
-                @foreach($cars as $car)
-                 
-                <div class="col-12 col-sm-6 col-md-4 col-lg-3">
-                    <div class="card h-100">
-                        <div class="position-relative">
-                            <img src="{{ $car->image_path ? asset('storage/' . $car->image_path) : asset('images/default-car.png') }}" 
-                                 class="card-img-top" 
-                                 alt="{{ $car->brand }} {{ $car->model }}"
-                                 style="height: 200px; object-fit: cover;">
-                            <span class="badge {{ $car->status === 'available' ? 'bg-success' : ($car->status === 'rented' ? 'bg-danger' : 'bg-warning') }} position-absolute top-0 end-0 m-2">
-                                {{ ucfirst($car->status) }}
-                            </span>
-                        </div>
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title">{{ $car->brand }} {{ $car->model }}</h5>
-                            <p class="card-text">
-                                <i class="fa-solid fa-users"></i> {{ $car->capacity }} Seater • 
-                                <i class="fa-solid fa-gears"></i> {{ ucfirst($car->transmission_type) }}
-                            </p>
-                            <p class="fw-bold text-primary">₱{{ number_format($car->rental_price_per_day, 2) }}/day</p>
-                            <div class="mt-auto d-flex gap-2">
-
-                                <!-- View modal footer button -->
-                                <button type="button" 
-                                    class="btn btn-show-action" 
-                                    data-bs-target="#viewCarModal" 
-                                    data-bs-toggle="modal"
-                                    data-car-id="{{$car->id}}">View</button>
-
-                                <!-- Card button -->
-                                <button type="button" 
-                                    {{ $car->status !== 'available' ? 'disabled' : '' }}
-                                    class="btn btn-bg-color"
-                                    data-bs-target="#bookingModal"
-                                    data-bs-toggle="modal"
-                                    data-car-id="{{ $car->id }}">Book Now</button>
-
-                                
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                
-
-                @endforeach
+            <div class="cr-result-badge" id="crResultBadge">
+                <i class="fa-solid fa-car"></i>
+                <span id="crTotalCount">—</span> vehicles
             </div>
         </div>
     </div>
-</x-app-layout>
-<script src="{{asset('assets/js/client/car/show.js')}}"></script>
-<script src="{{asset('assets/js/client/car/book.js')}}"></script>
-<!-- Static Car Details Modal -->
-<div class="modal fade" id="viewCarModal" tabindex="-1" aria-labelledby="viewCarModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
 
-            <div class="modal-header bg-header">
-                <h5 class="modal-title" id="viewCarModalLabel">Car Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
+    <div class="cr-body">
 
-            <div class="modal-body">
-                <div class="row">
+        {{-- ══════════════════════════════════════════════════════
+             FILTER BAR
+             ══════════════════════════════════════════════════════ --}}
+        <div class="cr-filter-bar" id="crFilterBar">
 
-                    <!-- Car Image -->
-                    <div class="col-md-6 mb-3 mb-md-0">
-                        <img id="viewCarImage"
-                             src="https://via.placeholder.com/400x300"
-                             class="img-fluid rounded"
-                             alt="Car Image"
-                             style="max-height: 300px; object-fit: cover; width: 100%;"
-                             onerror="this.src='https://via.placeholder.com/400x300?text=No+Image'">
+            {{-- Row 1: Search + Status + Sort + Reset --}}
+            <div class="cr-filter-row">
+
+                {{-- Search (always full-width on mobile, flex:1 on desktop) --}}
+                <div class="cr-search-wrap">
+                    <i class="fa-solid fa-magnifying-glass cr-search-icon"></i>
+                    <input type="text"
+                           class="cr-search"
+                           id="crSearch"
+                           placeholder="Search brand or model…"
+                           autocomplete="off">
+                    <button class="cr-search-clear" id="crSearchClear" type="button" aria-label="Clear search">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                {{--
+                    On mobile: .cr-filter-selects is a 2-col grid
+                    (Status | Sort)
+                    (Reset ——————— )
+                    On tablet+: display:contents dissolves the wrapper
+                    so Status, Sort, Reset flow directly into .cr-filter-row
+                --}}
+                <div class="cr-filter-selects">
+
+                    {{-- Status --}}
+                    <div class="cr-select-wrap">
+                        <label class="cr-select-label" for="crStatus">Status</label>
+                        <select class="cr-select" id="crStatus">
+                            <option value="">All Status</option>
+                            <option value="available">Available</option>
+                            <option value="rented">Rented</option>
+                            <option value="maintenance">Maintenance</option>
+                        </select>
                     </div>
 
-                    <!-- Car Info -->
-                    <div class="col-md-6">
-                        <h4 class="mb-3" id="viewCarTitle">—</h4>
-
-                        <div class="mb-3">
-                            <h5 class="text-primary mb-0" id="viewCarPrice">—</h5>
-                        </div>
-
-                        <hr>
-
-                        <div class="row g-3">
-
-                            <div class="col-6">
-                                <p class="mb-1 text-muted small">Brand</p>
-                                <p class="mb-0 fw-semibold" id="viewCarBrand">—</p>
-                            </div>
-
-                            <div class="col-6">
-                                <p class="mb-1 text-muted small">Model</p>
-                                <p class="mb-0 fw-semibold" id="viewCarModel">—</p>
-                            </div>
-
-                            <div class="col-6">
-                                <p class="mb-1 text-muted small">Year</p>
-                                <p class="mb-0 fw-semibold" id="viewCarYear">—</p>
-                            </div>
-
-                            <div class="col-6">
-                                <p class="mb-1 text-muted small">Color</p>
-                                <p class="mb-0 fw-semibold" id="viewCarColor">—</p>
-                            </div>
-
-                            <div class="col-6">
-                                <p class="mb-1 text-muted small">Capacity</p>
-                                <p class="mb-0 fw-semibold" id="viewCarCapacity">—</p>
-                            </div>
-
-                            <div class="col-6">
-                                <p class="mb-1 text-muted small">Transmission</p>
-                                <p class="mb-0 fw-semibold" id="viewCarTransmission">—</p>
-                            </div>
-
-                            <div class="col-6">
-                                <p class="mb-1 text-muted small">Fuel Type</p>
-                                <p class="mb-0 fw-semibold" id="viewCarFuel">—</p>
-                            </div>
-
-                            <div class="col-12">
-                                <p class="mb-1 text-muted small">Status</p>
-                                <span class="badge" id="viewCarStatus">—</span>
-                            </div>
-
-                        </div>
+                    {{-- Sort --}}
+                    <div class="cr-select-wrap">
+                        <label class="cr-select-label" for="crSort">Sort By</label>
+                        <select class="cr-select" id="crSort">
+                            <option value="name_asc">Name A → Z</option>
+                            <option value="name_desc">Name Z → A</option>
+                            <option value="price_asc">Price: Low → High</option>
+                            <option value="price_desc">Price: High → Low</option>
+                        </select>
                     </div>
 
+                    {{-- Reset --}}
+                    <button class="cr-reset-btn" id="crReset" type="button">
+                        <i class="fa-solid fa-rotate-left"></i> Reset Filters
+                    </button>
+
+                </div>{{-- /.cr-filter-selects --}}
+
+            </div>{{-- /.cr-filter-row --}}
+
+            {{-- Row 2: Seater capacity chips --}}
+            <div class="cr-chips-row">
+                <span class="cr-chips-label">
+                    <i class="fa-solid fa-users"></i> Capacity:
+                </span>
+
+                <div class="cr-chips">
+                    <input type="radio" class="cr-chip-input" name="crCapacity" id="crCap0" value="" checked>
+                    <label class="cr-chip" for="crCap0">All</label>
+
+                    <input type="radio" class="cr-chip-input" name="crCapacity" id="crCap2" value="2">
+                    <label class="cr-chip" for="crCap2"><i class="fa-solid fa-user"></i> 2+</label>
+
+                    <input type="radio" class="cr-chip-input" name="crCapacity" id="crCap4" value="4">
+                    <label class="cr-chip" for="crCap4"><i class="fa-solid fa-user"></i> 4+</label>
+
+                    <input type="radio" class="cr-chip-input" name="crCapacity" id="crCap5" value="5">
+                    <label class="cr-chip" for="crCap5"><i class="fa-solid fa-user"></i> 5+</label>
+
+                    <input type="radio" class="cr-chip-input" name="crCapacity" id="crCap6" value="6">
+                    <label class="cr-chip" for="crCap6"><i class="fa-solid fa-user"></i> 6+</label>
+
+                    <input type="radio" class="cr-chip-input" name="crCapacity" id="crCap7" value="7">
+                    <label class="cr-chip" for="crCap7"><i class="fa-solid fa-user"></i> 7+</label>
+
+                    <input type="radio" class="cr-chip-input" name="crCapacity" id="crCap10" value="10">
+                    <label class="cr-chip" for="crCap10"><i class="fa-solid fa-user"></i> 10+</label>
                 </div>
             </div>
 
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                
-                <button type="button" class="btn btn-bg-color" {{ $car->status !== 'available' ? 'disabled' : '' }} id="bookNowBtn" data-bs-target="#bookingModal" data-bs-toggle="modal">
-                    Book Now
+        </div>{{-- /.cr-filter-bar --}}
+
+        {{-- ══════════════════════════════════════════════════════
+             CAR GRID  (populated by JS)
+             ══════════════════════════════════════════════════════ --}}
+        <div class="cr-grid" id="crGrid">
+            {{-- 12 skeleton placeholders shown on first load --}}
+            @for ($i = 0; $i < 12; $i++)
+                <div class="cr-skel">
+                    <div class="cr-skel-img"></div>
+                    <div class="cr-skel-body">
+                        <div class="cr-skel-line cr-sl-w"></div>
+                        <div class="cr-skel-line cr-sl-m"></div>
+                        <div class="cr-skel-line cr-sl-n"></div>
+                        <div class="cr-skel-line cr-sl-btn"></div>
+                    </div>
+                </div>
+            @endfor
+        </div>
+
+        {{-- ══════════════════════════════════════════════════════
+             PAGINATION  (built by JS)
+             ══════════════════════════════════════════════════════ --}}
+        <div class="cr-pagination" id="crPagination"></div>
+
+    </div>{{-- /.cr-body --}}
+</div>{{-- /.cr-page --}}
+
+{{-- ══════════════════════════════════════════════════════════════
+     JS config + script
+     ══════════════════════════════════════════════════════════════ --}}
+<script>
+    window.CAR_CONFIG = {
+        dataUrl:    "{{ route('client.car.data') }}",
+        showUrl:    "{{ route('client.car.show', ['id' => '__ID__']) }}",
+        bookingUrl: "{{ route('client.bookings.store') }}",
+        clientId:   {{ auth()->id() }},
+    };
+</script>
+@push('scripts')
+<script src="{{ asset('assets/js/client/car/car.js') }}"></script>
+@endpush
+
+</x-app-layout>
+
+{{-- ══════════════════════════════════════════════════════════════
+     BOOKING MODAL
+     ══════════════════════════════════════════════════════════════ --}}
+<div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content cr-modal-content">
+
+            <div class="modal-header cr-modal-header">
+                <h5 class="modal-title cr-modal-title" id="bookingModalLabel">
+                    <i class="fa-solid fa-calendar-check me-2"></i> New Booking
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body cr-modal-body">
+                <form id="bookingForm" novalidate>
+                    @csrf
+
+                    {{-- Hidden Fields --}}
+                    <input type="hidden" id="carId"     name="carId"     value="">
+                    <input type="hidden" id="client_id" name="client_id" value="{{ auth()->id() }}">
+
+                    {{-- Selected Car Banner --}}
+                    <div class="cr-booking-car-banner" id="crBookingCarBanner">
+                        <i class="fa-solid fa-car"></i>
+                        <span id="crBookingCarName">—</span>
+                    </div>
+
+                    {{-- Pick-up Location --}}
+                    <div class="cr-form-group">
+                        <label class="cr-form-label" for="destinationFrom">
+                            <i class="fa-solid fa-location-dot"></i> Pick-up Location
+                        </label>
+                        <input type="text"
+                               class="cr-form-control"
+                               id="destinationFrom"
+                               name="destinationFrom"
+                               placeholder="Enter pick-up location"
+                               required>
+                    </div>
+
+                    {{-- Drop-off Location --}}
+                    <div class="cr-form-group">
+                        <label class="cr-form-label" for="destinationTo">
+                            <i class="fa-solid fa-location-dot"></i> Drop-off Location
+                        </label>
+                        <input type="text"
+                               class="cr-form-control"
+                               id="destinationTo"
+                               name="destinationTo"
+                               placeholder="Enter drop-off location"
+                               required>
+                    </div>
+
+                    {{-- Dates — stack on mobile --}}
+                    <div class="row g-2">
+                        <div class="col-12 col-sm-6">
+                            <div class="cr-form-group">
+                                <label class="cr-form-label" for="rental_start_date">
+                                    <i class="fa-solid fa-calendar-plus"></i> Start Date
+                                </label>
+                                <input type="datetime-local"
+                                       class="cr-form-control"
+                                       id="rental_start_date"
+                                       name="rental_start_date"
+                                       required>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="cr-form-group">
+                                <label class="cr-form-label" for="rental_end_date">
+                                    <i class="fa-solid fa-calendar-minus"></i> End Date
+                                </label>
+                                <input type="datetime-local"
+                                       class="cr-form-control"
+                                       id="rental_end_date"
+                                       name="rental_end_date"
+                                       required>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Duration Summary (auto-calculated) --}}
+                    <div class="cr-duration-summary" id="crDurationSummary" style="display:none">
+                        <div class="cr-duration-item">
+                            <span class="cr-duration-num" id="total_days_display">0</span>
+                            <span class="cr-duration-lbl">Days</span>
+                        </div>
+                        <div class="cr-duration-sep">·</div>
+                        <div class="cr-duration-item">
+                            <span class="cr-duration-num" id="total_hours_display">0</span>
+                            <span class="cr-duration-lbl">Hours</span>
+                        </div>
+                        <div class="cr-duration-sep">·</div>
+                        <div class="cr-duration-item">
+                            <span class="cr-duration-num" id="total_cost_display">—</span>
+                            <span class="cr-duration-lbl">Est. Total</span>
+                        </div>
+                    </div>
+
+                    {{-- Hidden fields for form submission --}}
+                    <input type="hidden" id="total_days"  name="total_days">
+                    <input type="hidden" id="total_hours" name="total_hours">
+
+                </form>
+            </div>
+
+            <div class="modal-footer cr-modal-footer">
+                <button type="button" class="cr-btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="cr-btn-primary" id="saveBookingBtn">
+                    <i class="fa-solid fa-check"></i> Submit Booking
                 </button>
             </div>
 
@@ -225,96 +283,89 @@
     </div>
 </div>
 
-<!-- Add this to your booking modal form -->
-<!-- Make sure your form has these exact IDs -->
+{{-- ══════════════════════════════════════════════════════════════
+     VIEW CAR MODAL
+     ══════════════════════════════════════════════════════════════ --}}
+<div class="modal fade" id="viewCarModal" tabindex="-1" aria-labelledby="viewCarModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content cr-modal-content">
 
-<div class="modal fade" id="bookingModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">New Booking</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            <div class="modal-header cr-modal-header">
+                <h5 class="modal-title cr-modal-title" id="viewCarModalLabel">
+                    <i class="fa-solid fa-car me-2"></i> Car Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body">
-                <form id="bookingForm">
-                    @csrf
-                    
-                    <!-- Hidden Fields -->
-                    <input type="hidden" id="carId" name="carId" value="{{{ $car->id ?? '' }}}">
-                    <input type="hidden" id="client_id" name="client_id" value="{{ auth()->id() }}">
-                    
-                    <!-- Destination From -->
-                    <div class="mb-3">
-                        <label for="destinationFrom" class="form-label">Pick-up Location</label>
-                        <input type="text" 
-                               class="form-control" 
-                               id="destinationFrom" 
-                               name="destinationFrom" 
-                               placeholder="Enter pick-up location"
-                               required>
-                    </div>
 
-                    <!-- Destination To -->
-                    <div class="mb-3">
-                        <label for="destinationTo" class="form-label">Drop-off Location</label>
-                        <input type="text" 
-                               class="form-control" 
-                               id="destinationTo" 
-                               name="destinationTo" 
-                               placeholder="Enter drop-off location"
-                               required>
-                    </div>
+            <div class="modal-body cr-modal-body">
+                <div class="row g-3">
 
-                    <!-- Start Date -->
-                    <div class="mb-3">
-                        <label for="rental_start_date" class="form-label">Start Date & Time</label>
-                        <input type="datetime-local" 
-                               class="form-control" 
-                               id="rental_start_date" 
-                               name="rental_start_date" 
-                               required>
-                    </div>
-
-                    <!-- End Date -->
-                    <div class="mb-3">
-                        <label for="rental_end_date" class="form-label">End Date & Time</label>
-                        <input type="datetime-local" 
-                               class="form-control" 
-                               id="rental_end_date" 
-                               name="rental_end_date" 
-                               required>
-                    </div>
-
-                    <!-- Auto-calculated Duration (Read-only) -->
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="total_days" class="form-label">Total Days</label>
-                            <input type="number" 
-                                   class="form-control bg-light" 
-                                   id="total_days" 
-                                   name="total_days" 
-                                   readonly>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="total_hours" class="form-label">Total Hours</label>
-                            <input type="number" 
-                                   class="form-control bg-light" 
-                                   id="total_hours" 
-                                   name="total_hours" 
-                                   readonly>
+                    {{-- Image --}}
+                    <div class="col-12 col-md-6">
+                        <div class="cr-modal-img-wrap">
+                            <img id="viewCarImage"
+                                 src=""
+                                 class="cr-modal-img"
+                                 alt="Car Image"
+                                 loading="lazy"
+                                 onerror="this.src='{{ asset('images/default-car.png') }}'">
+                            <span class="cr-modal-status-badge" id="viewCarStatusBadge"></span>
                         </div>
                     </div>
 
-                    
+                    {{-- Info --}}
+                    <div class="col-12 col-md-6">
+                        <h4 class="cr-modal-car-title" id="viewCarTitle">—</h4>
+                        <p class="cr-modal-price" id="viewCarPrice">—</p>
 
-                </form>
+                        <hr class="cr-modal-divider">
+
+                        <div class="cr-modal-specs">
+                            <div class="cr-spec-item">
+                                <span class="cr-spec-label"><i class="fa-solid fa-copyright"></i> Brand</span>
+                                <span class="cr-spec-value" id="viewCarBrand">—</span>
+                            </div>
+                            <div class="cr-spec-item">
+                                <span class="cr-spec-label"><i class="fa-solid fa-tag"></i> Model</span>
+                                <span class="cr-spec-value" id="viewCarModel">—</span>
+                            </div>
+                            <div class="cr-spec-item">
+                                <span class="cr-spec-label"><i class="fa-solid fa-calendar"></i> Year</span>
+                                <span class="cr-spec-value" id="viewCarYear">—</span>
+                            </div>
+                            <div class="cr-spec-item">
+                                <span class="cr-spec-label"><i class="fa-solid fa-palette"></i> Color</span>
+                                <span class="cr-spec-value" id="viewCarColor">—</span>
+                            </div>
+                            <div class="cr-spec-item">
+                                <span class="cr-spec-label"><i class="fa-solid fa-users"></i> Capacity</span>
+                                <span class="cr-spec-value" id="viewCarCapacity">—</span>
+                            </div>
+                            <div class="cr-spec-item">
+                                <span class="cr-spec-label"><i class="fa-solid fa-gears"></i> Transmission</span>
+                                <span class="cr-spec-value" id="viewCarTransmission">—</span>
+                            </div>
+                            <div class="cr-spec-item">
+                                <span class="cr-spec-label"><i class="fa-solid fa-gas-pump"></i> Fuel</span>
+                                <span class="cr-spec-value" id="viewCarFuel">—</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="saveBookingBtn">
-                    <i class="fas fa-save me-1"></i> Submit Booking
+
+            <div class="modal-footer cr-modal-footer">
+                <button type="button" class="cr-btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button"
+                        class="cr-btn-primary"
+                        id="bookNowBtn"
+                        data-bs-target="#bookingModal"
+                        data-bs-toggle="modal">
+                    <i class="fa-solid fa-calendar-check"></i> Book Now
                 </button>
             </div>
+
         </div>
     </div>
 </div>

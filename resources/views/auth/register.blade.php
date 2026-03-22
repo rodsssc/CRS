@@ -1,7 +1,7 @@
 <x-guest-layout>
     <div class="form-container register-container">
 
-        <!-- Logo -->
+        <!-- Logo overlapping top of card -->
         <div class="card-logo">
             <img
                 src="{{ asset('assets/images/logo.png') }}"
@@ -11,7 +11,6 @@
         </div>
 
         <div class="form-header">
-          
             <p class="form-subtitle">Fill in the details to get started</p>
         </div>
 
