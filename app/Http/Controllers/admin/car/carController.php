@@ -15,6 +15,11 @@ use Exception;
 class carController extends Controller
 {
     /**
+     * Hostinger public storage base path
+     */
+    private string $hostingerPublicStorage = '/home/u503987723/domains/bgcar-rental.org/public_html/storage/';
+
+    /**
      * Display a listing of cars with search, filter, and pagination
      */
     public function index(Request $request)
@@ -108,7 +113,22 @@ class carController extends Controller
             ]);
 
             if ($request->hasFile('image')) {
-                $validated['image_path'] = $request->file('image')->store('cars', 'public');
+                $path        = $request->file('image')->store('cars', 'public');
+                $validated['image_path'] = $path;
+
+                $source      = storage_path('app/public/' . $path);
+                $destination = $this->hostingerPublicStorage . $path;
+                $destDir     = dirname($destination);
+
+                if (!is_dir($destDir)) {
+                    mkdir($destDir, 0755, true);
+                }
+
+                if (file_exists($source)) {
+                    copy($source, $destination);
+                } else {
+                    Log::warning('Image source not found after store()', ['source' => $source]);
+                }
             }
 
             $validated['plate_number'] = strtoupper($validated['plate_number']);
@@ -218,12 +238,32 @@ class carController extends Controller
             $validated['plate_number'] = strtoupper($validated['plate_number']);
 
             if ($request->hasFile('image')) {
+                // Delete old image from both locations
                 if ($car->image_path) {
                     Storage::delete('public/' . $car->image_path);
+
+                    $oldFile = $this->hostingerPublicStorage . $car->image_path;
+                    if (file_exists($oldFile)) {
+                        unlink($oldFile);
+                    }
                 }
-                $validated['image_path'] = $request->file('image')->store('cars', 'public');
-            } else {
-                unset($validated['image_path']);
+
+                $path        = $request->file('image')->store('cars', 'public');
+                $validated['image_path'] = $path;
+
+                $source      = storage_path('app/public/' . $path);
+                $destination = $this->hostingerPublicStorage . $path;
+                $destDir     = dirname($destination);
+
+                if (!is_dir($destDir)) {
+                    mkdir($destDir, 0755, true);
+                }
+
+                if (file_exists($source)) {
+                    copy($source, $destination);
+                } else {
+                    Log::warning('Image source not found after store()', ['source' => $source]);
+                }
             }
 
             $car->update($validated);
@@ -279,6 +319,11 @@ class carController extends Controller
 
             if ($car->image_path) {
                 Storage::delete('public/' . $car->image_path);
+
+                $publicFile = $this->hostingerPublicStorage . $car->image_path;
+                if (file_exists($publicFile)) {
+                    unlink($publicFile);
+                }
             }
 
             $car->delete();

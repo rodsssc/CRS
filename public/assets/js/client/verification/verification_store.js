@@ -1,124 +1,178 @@
-// Update your existing validateClientVerificationFormData function
-function validateClientVerificationFormData(data) {
-    const requiredFields = [
-        'clientId',
-        'idType',
-        'idNumber'
-    ];
+// assets/js/client/verification/verification_store.js
 
-    for (const field of requiredFields) {
-        if (!data[field] || data[field].trim() === '') {
+document.addEventListener('DOMContentLoaded', function() {
+
+    // =========================================================
+    // ELEMENT REFS
+    // =========================================================
+    const fileInput = document.getElementById('id_front_image');
+    const uploadLabel = document.getElementById('uploadLabel');
+    const previewContainer = document.getElementById('frontPreviewContainer');
+    const previewImg = document.getElementById('frontPreview');
+    const removeBtn = document.getElementById('removeImageBtn');
+    const saveBtn = document.getElementById('saveClientVerification');
+
+    // =========================================================
+    // IMAGE PREVIEW
+    // =========================================================
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (!file) return;
+
+            // Validate type
+            const allowed = ['image/jpeg', 'image/jpg', 'image/png'];
+            if (!allowed.includes(file.type)) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid File Type',
+                    text: 'Please upload a JPG or PNG image only.',
+                    confirmButtonColor: '#3085d6',
+                });
+                this.value = '';
+                return;
+            }
+
+            // Validate size (5 MB)
+            if (file.size > 5 * 1024 * 1024) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'File Too Large',
+                    text: 'Please upload an image under 5 MB.',
+                    confirmButtonColor: '#3085d6',
+                });
+                this.value = '';
+                return;
+            }
+
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                if (uploadLabel) uploadLabel.classList.add('d-none');
+                if (previewContainer) previewContainer.classList.remove('d-none');
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // Remove image
+    if (removeBtn) {
+        removeBtn.addEventListener('click', function() {
+            if (fileInput) fileInput.value = '';
+            if (previewImg) previewImg.src = '';
+            if (previewContainer) previewContainer.classList.add('d-none');
+            if (uploadLabel) uploadLabel.classList.remove('d-none');
+        });
+    }
+
+    // =========================================================
+    // FORM SUBMIT
+    // =========================================================
+    if (!saveBtn) return;
+
+    saveBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+
+        // Safe element reads — no optional chaining on .value
+        const idTypeEl = document.getElementById('id_type');
+        const idNumberEl = document.getElementById('idNumber');
+        const consentEl = document.getElementById('verificationConsent');
+
+        const idType = idTypeEl ? idTypeEl.value.trim() : '';
+        const idNumber = idNumberEl ? idNumberEl.value.trim() : '';
+        const front = fileInput ? fileInput.files[0] : null;
+        const consent = consentEl ? consentEl.checked : false;
+
+        // Validate
+        if (!idType || !idNumber || !front) {
             Swal.fire({
                 icon: 'error',
-                title: 'Validation Error',
-                text: 'Please fill in all required fields',
-                confirmButtonColor: '#3085d6'
+                title: 'Incomplete Form',
+                text: 'Please fill in all required fields and upload your ID image.',
+                confirmButtonColor: '#3085d6',
             });
-            return false;
+            return;
         }
-    }
 
-    // Validate image uploads
-    if (!window.areAllImagesUploaded()) {
-        Swal.fire({
-            icon: 'error',
-            title: 'Missing Documents',
-            text: 'Please upload all required documents (ID Front, ID Back, and Selfie with ID)',
-            confirmButtonColor: '#3085d6'
-        });
-        return false;
-    }
-
-    return true;
-}
-
-document.getElementById('saveClientVerification').addEventListener('click', async(e) => {
-    e.preventDefault();
-
-    const idType = document.getElementById('id_type').value;
-    const idNumber = document.getElementById('idNumber').value;
-
-    const front = document.getElementById('id_front_image').files[0];
-    const back = document.getElementById('id_back_image').files[0];
-    const selfie = document.getElementById('selfie_with_id').files[0];
-
-    if (!idType || !idNumber || !front || !back || !selfie) {
-        Swal.fire('Error', 'All fields are required', 'error');
-        return;
-    }
-
-    if (!document.getElementById('verificationConsent').checked) {
-        Swal.fire('Consent Required', 'Please agree before submitting', 'warning');
-        return;
-    }
-
-    const formData = new FormData();
-    formData.append('id_type', idType);
-    formData.append('id_number', idNumber);
-    formData.append('id_front_image', front);
-    formData.append('id_back_image', back);
-    formData.append('selfie_with_id', selfie);
-
-
-
-    try {
-        const response = await fetch('/client/verification/verification', {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                'Accept': 'application/json'
-            },
-            body: formData
-        });
-
-        const data = await response.json();
-        Swal.close();
-
-        if (!response.ok) throw data;
-
-        if (data.success) {
+        if (!consent) {
             Swal.fire({
-                icon: 'success',
-                title: 'Verification Submitted',
-                text: 'Your documents have been sent. Please wait for admin approval.',
-                toast: true,
-                position: 'top-end',
-                timer: 1500,
-                timerProgressBar: true,
-                showConfirmButton: false,
+                icon: 'warning',
+                title: 'Consent Required',
+                text: 'Please agree to the declaration before submitting.',
+                confirmButtonColor: '#3085d6',
+            });
+            return;
+        }
 
+        // Build FormData
+        const formData = new FormData();
+        formData.append('id_type', idType);
+        formData.append('id_number', idNumber);
+        formData.append('id_front_image', front);
 
-            }).then(() => {
+        // Show loading — NOT a toast, so allowOutsideClick is valid here
+        Swal.fire({
+            title: 'Submitting…',
+            text: 'Please wait while we upload your document.',
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            showConfirmButton: false,
+            didOpen: function() {
+                Swal.showLoading();
+            },
+        });
+
+        try {
+            const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            const response = await fetch('/client/verification/verification', {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': csrfMeta ? csrfMeta.content : '',
+                    'Accept': 'application/json',
+                },
+                body: formData,
+            });
+
+            const data = await response.json();
+            Swal.close();
+
+            if (!response.ok) {
+                throw data;
+            }
+
+            if (data.success) {
+                // Success toast — no allowOutsideClick on toasts
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Verification Submitted',
+                    text: 'Your documents have been sent. Please wait for admin approval.',
+                    toast: true,
+                    position: 'top-end',
+                    timer: 1500,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                });
+
                 document.body.classList.add('fade-out');
-
-                setTimeout(() => {
+                setTimeout(function() {
                     window.location.href = data.redirect;
                 }, 800);
+            }
+
+        } catch (err) {
+            Swal.close();
+            const message = err.message ||
+                (err.errors ? Object.values(err.errors).flat().join('\n') : '') ||
+                'Something went wrong. Please try again.';
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Submission Failed',
+                text: message,
+                confirmButtonColor: '#dc3545',
             });
         }
-
-
-
-
-    } catch (err) {
-        Swal.fire(
-            'Error',
-            err.message || Object.values(err.errors || {}).flat().join('\n'),
-            'error'
-        );
-    }
-});
-
-
-function displayValidationErrors(errors) {
-    const errorList = Object.entries(errors)
-        .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
-        .join('\n');
-
-    Swal.fire({
-        icon: 'error',
-        title: 'Validation Error',
-        html: `<pre style="text-align: left; font-size: 14px;">${errorList}</pre>`,
-        confirmButtonColor: '#3085d6'
     });
-}
+
+});

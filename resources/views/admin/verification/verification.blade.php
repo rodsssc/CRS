@@ -1,4 +1,3 @@
-
 <x-app-layout>
     <div class="container-fluid px-4 py-3">
         <!-- Header -->
@@ -6,73 +5,58 @@
             <div>
                 <h2 class="page-title mb-0">Verification Management</h2>
             </div>
-           
         </div>
 
- 
-            <!-- Stats Cards -->
-            <div class="row g-2 mb-3">
-                <div class="col-6 col-lg">
-                    <div class="stat-card">
-                        <div class="stat-icon bg-primary-soft">
-                            <!-- Users / Clients -->
-                            <i class="fas fa-users text-primary"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-label">Total Client</div>
-                            <div class="stat-value">
-                                {{ $totalClients ?: 0 }}
-                            </div>
-                        </div>
+        <!-- Stats Cards -->
+        <div class="row g-2 mb-3">
+            <div class="col-6 col-lg">
+                <div class="stat-card">
+                    <div class="stat-icon bg-primary-soft">
+                        <i class="fas fa-users text-primary"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Total Client</div>
+                        <div class="stat-value">{{ $totalClients ?: 0 }}</div>
                     </div>
                 </div>
-                
-                <div class="col-6 col-lg">
-                    <div class="stat-card">
-                        <div class="stat-icon bg-info-soft">
-                            <!-- Verified / Check -->
-                            <i class="fas fa-user-check text-info"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-label">Verified</div>
-                            <div class="stat-value">
-                                {{ $verifiedCount ?: 0 }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-6 col-lg">
-                    <div class="stat-card">
-                        <div class="stat-icon bg-warning-soft">
-                            <!-- Pending / Clock -->
-                            <i class="fas fa-clock text-warning"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-label">Pending</div>
-                            <div class="stat-value">{{$pendingCount ?: 0}}</div>
-                        </div>
-                    </div>
-                </div>
-            
-                <div class="col-6 col-lg">
-                    <div class="stat-card">
-                        <div class="stat-icon bg-danger-soft">
-                            <!-- Rejected / X -->
-                            <i class="fas fa-user-times text-danger"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-label">Reject</div>
-                            <div class="stat-value">{{$rejectedCount ?: 0}}</div>
-                        </div>
-                    </div>
-                </div>
-
-
-        
             </div>
- 
 
+            <div class="col-6 col-lg">
+                <div class="stat-card">
+                    <div class="stat-icon bg-info-soft">
+                        <i class="fas fa-user-check text-info"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Verified</div>
+                        <div class="stat-value">{{ $verifiedCount ?: 0 }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6 col-lg">
+                <div class="stat-card">
+                    <div class="stat-icon bg-warning-soft">
+                        <i class="fas fa-clock text-warning"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Pending</div>
+                        <div class="stat-value">{{ $pendingCount ?: 0 }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6 col-lg">
+                <div class="stat-card">
+                    <div class="stat-icon bg-danger-soft">
+                        <i class="fas fa-user-times text-danger"></i>
+                    </div>
+                    <div class="stat-content">
+                        <div class="stat-label">Reject</div>
+                        <div class="stat-value">{{ $rejectedCount ?: 0 }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Table Card -->
         <div class="table-card d-flex flex-column" style="min-height: 520px;">
@@ -81,7 +65,6 @@
             <div class="table-controls">
                 <form method="GET" action="{{ route('admin.verification.index') }}" class="row g-2 align-items-center">
 
-                    {{-- Search --}}
                     <div class="col-md-6 col-lg-5">
                         <div class="search-box">
                             <i class="fas fa-search search-icon"></i>
@@ -94,13 +77,11 @@
                         </div>
                     </div>
 
-                    {{-- Search & Clear --}}
                     <div class="col-auto d-flex gap-2">
                         <button class="btn btn-primary btn-sm" type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
                         <a class="btn btn-outline-secondary btn-sm" href="{{ route('admin.verification.index') }}">Clear</a>
                     </div>
 
-                    {{-- Status Filter --}}
                     <div class="col-md-3 col-lg-2">
                         <select class="form-select form-select-sm" name="status" onchange="this.form.submit()">
                             <option value="">All Status</option>
@@ -110,7 +91,6 @@
                         </select>
                     </div>
 
-                    {{-- Per Page --}}
                     <div class="col-md-2 col-lg-2 ms-lg-auto">
                         <select class="form-select form-select-sm" name="per_page" onchange="this.form.submit()">
                             <option value="10" @selected(($perPage ?? 10) == 10)>10 per page</option>
@@ -122,12 +102,11 @@
                 </form>
             </div>
 
-            <!-- Table — grows to fill available space -->
+            <!-- Table -->
             <div class="table-responsive flex-grow-1">
                 <table class="table custom-table mb-0">
                     <thead>
                         <tr>
-                            
                             <th>Client ID</th>
                             <th>First Name</th>
                             <th>Last Name</th>
@@ -143,13 +122,8 @@
                         @forelse ($clientProfile as $client)
                             @php $verification = $client->user->latestVerification; @endphp
                             <tr>
-                                
-                                <td>
-                                    <span class="client-first-name">#00{{ $client->id }}</span>
-                                </td>
-                                <td>
-                                    <span class="client-first-name">{{ $client->first_name }}</span>
-                                </td>
+                                <td><span class="client-first-name">#00{{ $client->id }}</span></td>
+                                <td><span class="client-first-name">{{ $client->first_name }}</span></td>
                                 <td class="text-muted">{{ $client->last_name }}</td>
                                 <td class="text-muted">{{ $client->user->phone }}</td>
                                 <td class="text-muted">
@@ -193,7 +167,7 @@
                 </table>
             </div>
 
-            <!-- Footer — always at bottom -->
+            <!-- Footer -->
             <div class="table-footer mt-auto">
                 <div class="showing-entries">
                     @if($clientProfile->total() > 0)
@@ -210,12 +184,14 @@
 
         </div>
     </div>
-
 </x-app-layout>
-<script src="{{asset('assets/js/admin/verification/verification.js')}}"></script>
+
+<script src="{{ asset('assets/js/admin/verification/verification.js') }}"></script>
 
 
-{{-- View Verification Modal --}}
+{{-- ═══════════════════════════════════════════════════════════════
+     View Verification Modal
+═══════════════════════════════════════════════════════════════ --}}
 <div class="modal fade" tabindex="-1" id="viewVerificationModal">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
@@ -226,7 +202,9 @@
                     <h6 class="modal-title text-white fw-bold mb-0">
                         <i class="fas fa-user-check me-2"></i>Verification Details
                     </h6>
-                    <p class="text-white-50 mb-0" style="font-size:11px;">Review client identity and submitted documents</p>
+                    <p class="text-white-50 mb-0" style="font-size:11px;">
+                        Review client identity and submitted documents
+                    </p>
                 </div>
                 <button class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -235,50 +213,64 @@
             <div class="modal-body p-3 bg-light">
                 <div class="row g-3">
 
-                    {{-- LEFT - ID Images --}}
+                    {{-- ── LEFT COLUMN — ID Image + Status ── --}}
                     <div class="col-lg-5 d-flex flex-column gap-3">
 
-                        <div>
-                            <div class="text-muted fw-semibold mb-1" style="font-size:10px; letter-spacing:.06em;">ID FRONT</div>
-                            <img id="viewIdFrontImage"
-                                 src="https://via.placeholder.com/500x300?text=ID+Front"
-                                 alt="ID Front"
-                                 class="img-fluid rounded-3 border w-100"
-                                 style="height:120px; object-fit:cover;">
+                        {{-- ID Front image card --}}
+                        <div class="bg-white border rounded-3 p-3 d-flex flex-column align-items-center"
+                             style="min-height: 240px;">
+
+                            <div class="text-muted fw-semibold mb-2 text-center"
+                                 style="font-size:10px; letter-spacing:.06em;">
+                                ID FRONT
+                            </div>
+
+                            {{--
+                                ✅ CHANGES:
+                                  • Wrapper uses flex + justify/align center so the image
+                                    is always horizontally AND vertically centred.
+                                  • margin-top: auto + margin-bottom: auto push it to the
+                                    middle when the card is taller than the image.
+                                  • width: 100% on the wrapper + max-width on the <img>
+                                    let it scale responsively without overflowing.
+                                  • object-fit: cover gives a clean, uniform crop.
+                            --}}
+                            <div class="d-flex justify-content-center align-items-center flex-grow-1 w-100"
+                                 style="margin-top: 8px;">
+                                <img id="viewIdFrontImage"
+                                     src="https://via.placeholder.com/500x300?text=ID+Front"
+                                     alt="ID Front"
+                                     class="rounded-3 border"
+                                     style="
+                                         width: 100%;
+                                         max-width: 320px;
+                                         height: 190px;
+                                         object-fit: cover;
+                                         display: block;
+                                     ">
+                            </div>
                         </div>
 
-                        <div>
-                            <div class="text-muted fw-semibold mb-1" style="font-size:10px; letter-spacing:.06em;">ID BACK</div>
-                            <img id="viewIdBackImage"
-                                 src="https://via.placeholder.com/500x300?text=ID+Back"
-                                 alt="ID Back"
-                                 class="img-fluid rounded-3 border w-100"
-                                 style="height:120px; object-fit:cover;">
-                        </div>
-
-                        <div>
-                            <div class="text-muted fw-semibold mb-1" style="font-size:10px; letter-spacing:.06em;">SELFIE WITH ID</div>
-                            <img id="viewSelfieImage"
-                                 src="https://via.placeholder.com/500x300?text=Selfie+with+ID"
-                                 alt="Selfie with ID"
-                                 class="img-fluid rounded-3 border w-100"
-                                 style="height:120px; object-fit:cover;">
-                        </div>
-
-                        <div class=" rounded-3 text-center py-2">
-                            <div class="text-white-50" style="font-size:10px;">VERIFICATION STATUS</div>
-                            <span class="status-tag status-pending mt-1 d-inline-block" id="viewVerificationStatus">Pending</span>
+                        {{-- Verification Status badge --}}
+                        <div class="bg-white border rounded-3 text-center py-3">
+                            <div class="text-muted fw-semibold mb-1"
+                                 style="font-size:10px; letter-spacing:.06em;">
+                                VERIFICATION STATUS
+                            </div>
+                            <span class="status-tag status-pending d-inline-block"
+                                  id="viewVerificationStatus">Pending</span>
                         </div>
 
                     </div>
 
-                    {{-- RIGHT - Details --}}
+                    {{-- ── RIGHT COLUMN — Details ── --}}
                     <div class="col-lg-7 d-flex flex-column gap-2">
 
                         {{-- Client Name --}}
                         <div class="bg-white border rounded-3 p-3">
                             <div class="fw-bold small">
-                                <span id="viewClientFirstName">John</span> <span id="viewClientLastName">Doe</span>
+                                <span id="viewClientFirstName">John</span>
+                                <span id="viewClientLastName">Doe</span>
                             </div>
                             <div class="text-muted" style="font-size:11px;">
                                 <span id="viewClientEmail">john.doe@example.com</span>
@@ -287,75 +279,90 @@
 
                         {{-- Client Profile --}}
                         <div class="bg-white border rounded-3 p-3">
-                            <div class="text-muted fw-semibold mb-2" style="font-size:10px; letter-spacing:.06em;">
+                            <div class="text-muted fw-semibold mb-2"
+                                 style="font-size:10px; letter-spacing:.06em;">
                                 CLIENT PROFILE
                             </div>
                             <div class="row g-2">
                                 <div class="col-6">
                                     <div class="text-muted" style="font-size:10px;">Phone Number</div>
-                                    <div class="fw-semibold" style="font-size:11px;" id="viewClientPhone">+63 912 345 6789</div>
+                                    <div class="fw-semibold" style="font-size:11px;"
+                                         id="viewClientPhone">+63 912 345 6789</div>
                                 </div>
                                 <div class="col-6">
                                     <div class="text-muted" style="font-size:10px;">Date of Birth</div>
-                                    <div class="fw-semibold" style="font-size:11px;" id="viewClientDateBirth">Jan 15, 1990</div>
+                                    <div class="fw-semibold" style="font-size:11px;"
+                                         id="viewClientDateBirth">Jan 15, 1990</div>
                                 </div>
                                 <div class="col-6">
                                     <div class="text-muted" style="font-size:10px;">Nationality</div>
-                                    <div class="fw-semibold" style="font-size:11px;" id="viewClientNationality">Filipino</div>
+                                    <div class="fw-semibold" style="font-size:11px;"
+                                         id="viewClientNationality">Filipino</div>
                                 </div>
                                 <div class="col-6">
                                     <div class="text-muted" style="font-size:10px;">Facebook Name</div>
-                                    <div class="fw-semibold" style="font-size:11px;" id="viewClientFacebook">John Doe FB</div>
+                                    <div class="fw-semibold" style="font-size:11px;"
+                                         id="viewClientFacebook">John Doe FB</div>
                                 </div>
                                 <div class="col-12">
                                     <div class="text-muted" style="font-size:10px;">Address</div>
-                                    <div class="fw-semibold" style="font-size:11px;" id="viewClientAddress">123 Main St, City, Province</div>
+                                    <div class="fw-semibold" style="font-size:11px;"
+                                         id="viewClientAddress">123 Main St, City, Province</div>
                                 </div>
                             </div>
                         </div>
 
                         {{-- Emergency Contact --}}
                         <div class="bg-white border rounded-3 p-3">
-                            <div class="text-muted fw-semibold mb-2" style="font-size:10px; letter-spacing:.06em;">
+                            <div class="text-muted fw-semibold mb-2"
+                                 style="font-size:10px; letter-spacing:.06em;">
                                 EMERGENCY CONTACT
                             </div>
                             <div class="row g-2">
                                 <div class="col-6">
                                     <div class="text-muted" style="font-size:10px;">Contact Name</div>
-                                    <div class="fw-semibold" style="font-size:11px;" id="viewEmergencyName">Jane Doe</div>
+                                    <div class="fw-semibold" style="font-size:11px;"
+                                         id="viewEmergencyName">Jane Doe</div>
                                 </div>
                                 <div class="col-6">
                                     <div class="text-muted" style="font-size:10px;">Contact Phone</div>
-                                    <div class="fw-semibold" style="font-size:11px;" id="viewEmergencyPhone">+63 998 765 4321</div>
+                                    <div class="fw-semibold" style="font-size:11px;"
+                                         id="viewEmergencyPhone">+63 998 765 4321</div>
                                 </div>
                             </div>
                         </div>
 
                         {{-- ID Verification Details --}}
                         <div class="bg-white border rounded-3 p-3">
-                            <div class="text-muted fw-semibold mb-2" style="font-size:10px; letter-spacing:.06em;">
+                            <div class="text-muted fw-semibold mb-2"
+                                 style="font-size:10px; letter-spacing:.06em;">
                                 ID VERIFICATION DETAILS
                             </div>
                             <div class="row g-2">
                                 <div class="col-6">
                                     <div class="text-muted" style="font-size:10px;">ID Type</div>
-                                    <div class="fw-semibold text-capitalize" style="font-size:11px;" id="viewIdType">National ID</div>
+                                    <div class="fw-semibold text-capitalize" style="font-size:11px;"
+                                         id="viewIdType">National ID</div>
                                 </div>
                                 <div class="col-6">
                                     <div class="text-muted" style="font-size:10px;">ID Number</div>
-                                    <div class="fw-semibold" style="font-size:11px;" id="viewIdNumber">1234-5678-9012</div>
+                                    <div class="fw-semibold" style="font-size:11px;"
+                                         id="viewIdNumber">1234-5678-9012</div>
                                 </div>
                                 <div class="col-6">
                                     <div class="text-muted" style="font-size:10px;">Submitted At</div>
-                                    <div class="fw-semibold" style="font-size:11px;" id="viewSubmittedAt">Feb 10, 2026 3:45 PM</div>
+                                    <div class="fw-semibold" style="font-size:11px;"
+                                         id="viewSubmittedAt">Feb 10, 2026 3:45 PM</div>
                                 </div>
                                 <div class="col-6">
                                     <div class="text-muted" style="font-size:10px;">Verified At</div>
-                                    <div class="fw-semibold" style="font-size:11px;" id="viewVerifiedAt">-</div>
+                                    <div class="fw-semibold" style="font-size:11px;"
+                                         id="viewVerifiedAt">-</div>
                                 </div>
                                 <div class="col-12">
                                     <div class="text-muted" style="font-size:10px;">Verified By</div>
-                                    <div class="fw-semibold" style="font-size:11px;" id="viewVerifiedBy">-</div>
+                                    <div class="fw-semibold" style="font-size:11px;"
+                                         id="viewVerifiedBy">-</div>
                                 </div>
                             </div>
 
@@ -363,7 +370,8 @@
                             <div class="col-12 mt-2" id="rejectionReasonSection" style="display:none;">
                                 <div class="alert alert-danger mb-0 py-2 px-3">
                                     <div class="d-flex align-items-start gap-2">
-                                        <i class="fas fa-exclamation-triangle text-danger mt-1" style="font-size:11px;"></i>
+                                        <i class="fas fa-exclamation-triangle text-danger mt-1"
+                                           style="font-size:11px;"></i>
                                         <div>
                                             <div class="fw-semibold" style="font-size:10px;">Rejection Reason</div>
                                             <div style="font-size:11px;" id="viewRejectionReason">-</div>
@@ -373,9 +381,9 @@
                             </div>
                         </div>
 
-                    </div>
-                </div>
-            </div>
+                    </div>{{-- /col-lg-7 --}}
+                </div>{{-- /row --}}
+            </div>{{-- /modal-body --}}
 
             {{-- FOOTER --}}
             <div class="modal-footer border-0 bg-white px-4 pb-4 pt-2 gap-2">
@@ -396,33 +404,40 @@
     </div>
 </div>
 
-<!-- Reject Verification Modal -->
-<div class="modal fade" id="rejectVerificationModal" tabindex="-1" aria-labelledby="rejectVerificationModalLabel" aria-hidden="true">
+
+{{-- ═══════════════════════════════════════════════════════════════
+     Reject Verification Modal
+═══════════════════════════════════════════════════════════════ --}}
+<div class="modal fade" id="rejectVerificationModal" tabindex="-1"
+     aria-labelledby="rejectVerificationModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg rounded-3 overflow-hidden">
+
             <div class="modal-header bg-header text-white border-0 px-4 py-3">
                 <div>
                     <h5 class="modal-title fw-bold mb-0" id="rejectVerificationModalLabel">
                         <i class="fas fa-times-circle me-2"></i>Reject Verification
                     </h5>
-                    <p class="text-white-50 mb-0" style="font-size:11px;">Please provide a reason for rejection</p>
+                    <p class="text-white-50 mb-0" style="font-size:11px;">
+                        Please provide a reason for rejection
+                    </p>
                 </div>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white"
+                        data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+
             <div class="modal-body p-4 bg-light">
                 <input type="hidden" id="rejectionVerificationId">
-                
+
                 <div class="mb-3">
                     <label for="rejectionReasonInput" class="form-label small fw-semibold text-muted mb-2">
                         Rejection Reason <span class="text-muted">(optional)</span>
                     </label>
-                    <textarea 
-                        class="form-control" 
-                        id="rejectionReasonInput" 
-                        rows="4" 
-                        placeholder="e.g. Blurry ID image, mismatched information, incomplete documents..."
-                        maxlength="500"
-                    ></textarea>
+                    <textarea class="form-control"
+                              id="rejectionReasonInput"
+                              rows="4"
+                              placeholder="e.g. Blurry ID image, mismatched information, incomplete documents..."
+                              maxlength="500"></textarea>
                     <div class="d-flex justify-content-end mt-1">
                         <small class="text-muted"><span id="rejectionCharCount">0</span>/500</small>
                     </div>
@@ -433,28 +448,30 @@
                     This action cannot be undone. The client will be notified of the rejection.
                 </div>
             </div>
+
             <div class="modal-footer border-0 bg-light px-4 py-3">
-                <button type="button" class="btn btn-secondary btn-sm" id="cancelRejectBtn" data-bs-dismiss="modal">
+                <button type="button" class="btn btn-secondary btn-sm"
+                        id="cancelRejectBtn" data-bs-dismiss="modal">
                     <i class="fas fa-times me-1"></i>Cancel
                 </button>
                 <button type="button" class="btn btn-danger btn-sm" id="confirmRejectBtn">
                     <i class="fas fa-check me-1"></i>Confirm Rejection
                 </button>
             </div>
+
         </div>
     </div>
 </div>
 
 <script>
-    // Character counter for rejection modal
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const rejectionInput = document.getElementById('rejectionReasonInput');
-        const charCount = document.getElementById('rejectionCharCount');
-        
+        const charCount     = document.getElementById('rejectionCharCount');
+
         if (rejectionInput && charCount) {
-            rejectionInput.addEventListener('input', function() {
+            rejectionInput.addEventListener('input', function () {
                 charCount.textContent = this.value.length;
             });
         }
     });
-</script>v
+</script>

@@ -152,16 +152,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             setTimeout(async() => {
+                // ✅ CORRECT
                 Swal.fire({
-                    icon: 'loading',
+
                     title: 'Saving profile...',
-                    toast: true,
                     allowOutsideClick: false,
-                    didOpen: () => Swal.showLoading(),
-                    position: 'top-end',
+                    allowEscapeKey: false,
                     showConfirmButton: false,
-                    timer: 1500,
-                    timerProgressBar: true
+                    didOpen: function() {
+                        Swal.showLoading();
+                    },
                 });
 
                 try {

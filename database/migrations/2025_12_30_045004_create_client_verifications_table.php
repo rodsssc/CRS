@@ -17,8 +17,6 @@ return new class extends Migration
             $table->enum('id_type', ['passport', 'driver_license', 'national_id','sss','philhealth']);
             $table->string('id_number')->unique();
             $table->string('id_front_image_path');
-            $table->string('id_back_image_path');
-            $table->string('selfie_with_id_image_path');
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->dateTime('submitted_at')->nullable();
             $table->dateTime('verified_at')->nullable();

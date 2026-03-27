@@ -19,7 +19,7 @@
                     </div>
                     <div class="stat-content">
                         <div class="stat-label">Total Users</div>
-                        <div class="stat-value">{{ $users->count() }}</div>
+                        <div class="stat-value">{{ $stats['total'] }}</div>
                     </div>
                 </div>
             </div>
@@ -31,7 +31,7 @@
                     </div>
                     <div class="stat-content">
                         <div class="stat-label">Admins</div>
-                        <div class="stat-value">{{ $users->where('role', 'admin')->count() }}</div>
+                        <div class="stat-value">{{ $stats['admin'] }}</div>
                     </div>
                 </div>
             </div>
@@ -43,7 +43,7 @@
                     </div>
                     <div class="stat-content">
                         <div class="stat-label">Owners</div>
-                        <div class="stat-value">{{ $users->where('role', 'owner')->count() }}</div>
+                        <div class="stat-value">{{ $stats['owner'] }}</div>
                     </div>
                 </div>
             </div>
@@ -55,7 +55,7 @@
                     </div>
                     <div class="stat-content">
                         <div class="stat-label">Staff</div>
-                        <div class="stat-value">{{ $users->where('role', 'staff')->count() }}</div>
+                        <div class="stat-value">{{ $stats['staff'] }}</div>
                     </div>
                 </div>
             </div>
@@ -67,7 +67,7 @@
                     </div>
                     <div class="stat-content">
                         <div class="stat-label">Clients</div>
-                        <div class="stat-value">{{ $users->where('role', 'client')->count() }}</div>
+                        <div class="stat-value">{{ $stats['client'] }}</div>
                     </div>
                 </div>
             </div>
@@ -76,13 +76,14 @@
         <!-- Table Card -->
         <div class="table-card">
             <div class="table-controls">
-                <form method="GET" class="row g-2 align-items-center">
+                <form method="GET" action="{{ route('admin.user.index') }}" class="row g-2 align-items-center">
 
                     <!-- Search Bar -->
                     <div class="col-md-6 col-lg-5">
                         <div class="search-box">
+                            <i class="fas fa-search search-icon"></i>
                             <input type="text"
-                                class="form-control "
+                                class="form-control form-control-sm"
                                 name="q"
                                 value="{{ $q ?? '' }}"
                                 placeholder="Search users..."
@@ -124,28 +125,22 @@
                 <table class="table custom-table mb-0">
                     <thead>
                         <tr>
-                            
                             <th>User ID</th>
-                            <th >Name</th>
-                            <th >Email</th>
+                            <th>Name</th>
+                            <th>Email</th>
                             <th width="15%">Phone</th>
                             <th width="12%">Role</th>
                             <th width="10%">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($users as $user)
+                        @forelse ($users as $user)
                             <tr>
-                                
                                 <td>
-                                    <div class="user-info">
-                                        <span class="user-name">#00{{ $user->id }}</span>
-                                    </div>
+                                    <span class="user-name">#00{{ $user->id }}</span>
                                 </td>
                                 <td>
-                                    <div class="user-info">
-                                        <span class="user-name">{{ $user->name }}</span>
-                                    </div>
+                                    <span class="user-name">{{ $user->name }}</span>
                                 </td>
                                 <td class="text-muted">{{ $user->email }}</td>
                                 <td class="text-muted">{{ $user->phone }}</td>
@@ -162,7 +157,7 @@
                                 </td>
                                 <td>
                                     <div class="action-buttons">
-                                        <button class="btn-action" title="View" data-user-id="{{$user->id}}">
+                                        <button class="btn-action" title="View" data-user-id="{{ $user->id }}">
                                             <i class="fas fa-eye"></i>
                                         </button>
                                         <button class="btn-action" title="Edit" data-user-id="{{ $user->id }}">
@@ -174,47 +169,41 @@
                                     </div>
                                 </td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-5">
+                                    <i class="fas fa-inbox fs-4 mb-2 d-block"></i>
+                                    No users found
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
 
             <!-- Pagination -->
-            <div class="table-footer">
-               <div class="showing-entries">
-                {{-- @if ($users->total() > 0)
-                    Showing {{ $users->firstItem() }}-{{ $users->lastItem() }} of {{ $users->total() }}
-                @else
-                    Showing 0 of 0
-                @endif --}}
-            </div>
-            <div>
-                {{-- {{ $users->links() }} --}}
-            </div>
-                <nav>
-                    <ul class="pagination mb-0">
-                        <li class="page-item disabled">
-                            <a class="page-link" href="#">
-                                <i class="fas fa-chevron-left"></i>
-                            </a>
-                        </li>
-                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                        <li class="page-item"><a class="page-link" href="#">2</a></li>
-                        <li class="page-item">
-                            <a class="page-link" href="#">
-                                <i class="fas fa-chevron-right"></i>
-                            </a>
-                        </li>
-                    </ul>
-                </nav>
-            </div>
+            @if($users->hasPages())
+                <div class="d-flex justify-content-between align-items-center px-3 py-2 border-top">
+                    <div class="text-muted small">
+                        Showing {{ $users->firstItem() }}–{{ $users->lastItem() }}
+                        of {{ $users->total() }} users
+                    </div>
+                    <div>
+                        {{ $users->onEachSide(1)->links('pagination::bootstrap-5') }}
+                    </div>
+                </div>
+            @else
+                <div class="px-3 py-2 border-top text-muted small">
+                    {{ $users->total() }} user(s) found
+                </div>
+            @endif
+
         </div>
     </div>
-
 </x-app-layout>
 
 
-<script src="{{asset('assets/js/admin/user/user.js')}}"></script>
+<script src="{{ asset('assets/js/admin/user/user.js') }}"></script>
 
 
 {{-- Add User Modal --}}
@@ -519,4 +508,3 @@
         </div>
     </div>
 </div>
-

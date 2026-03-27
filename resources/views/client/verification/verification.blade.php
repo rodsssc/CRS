@@ -38,7 +38,6 @@
                 ══════════════════════════════════════════ --}}
                 <div class="tab-pane fade show active" id="profiling" role="tabpanel">
 
-                    {{-- Section header --}}
                     <div class="vf-section-head">
                         <div class="vf-section-icon vf-section-icon-blue">
                             <i class="bi bi-person-circle"></i>
@@ -150,7 +149,7 @@
                                     <span class="vf-input-icon"><i class="bi bi-telephone"></i></span>
                                     <input type="tel" class="vf-input" id="emergencyContactPhone"
                                            name="emergencyContactPhone" required placeholder="+63 XXX XXX XXXX"
-                                           pattern="[0-9+\s\-()]+">
+                                           pattern="[0-9+()\- ]+">
                                 </div>
                                 <div class="invalid-feedback">Please enter a valid phone number.</div>
                             </div>
@@ -173,36 +172,20 @@
                 ══════════════════════════════════════════ --}}
                 <div class="tab-pane fade" id="verification" role="tabpanel">
 
-                    {{-- Section header --}}
                     <div class="vf-section-head">
                         <div class="vf-section-icon vf-section-icon-green">
                             <i class="bi bi-shield-check"></i>
                         </div>
                         <div>
                             <h5 class="vf-section-title">ID Verification</h5>
-                            <p class="vf-section-sub">Upload your identification documents to complete setup</p>
+                            <p class="vf-section-sub">Upload your identification document to complete setup</p>
                         </div>
                     </div>
 
                     <form id="verificationForm" novalidate enctype="multipart/form-data">
                         @csrf
 
-                        {{-- Tips --}}
-                        <div class="vf-alert vf-alert-info">
-                            <i class="bi bi-lightbulb-fill vf-alert-icon"></i>
-                            <div>
-                                <strong>Photo Tips</strong>
-                                <ul>
-                                    <li>Clear, bright, and in focus — all four corners visible</li>
-                                    <li>For selfie: hold ID next to your face</li>
-                                    <li>Accepted: JPG, PNG · Max 5 MB per file</li>
-                                </ul>
-                            </div>
-                        </div>
-
                         {{-- ID info --}}
-                        <p class="vf-sub-heading"><i class="bi bi-card-checklist"></i> ID Information</p>
-
                         <div class="vf-row vf-form-group">
                             <div>
                                 <label class="vf-label" for="id_type">ID Type <span class="req">*</span></label>
@@ -239,110 +222,32 @@
                             </div>
                         </div>
 
-                        {{-- Document upload --}}
-                        <p class="vf-sub-heading"><i class="bi bi-cloud-upload"></i> Document Upload</p>
-
-                        {{-- ID Front + Back --}}
-                        <div class="vf-upload-grid">
-
-                            {{-- Front --}}
-                            <div>
-                                <div class="vf-upload-label-text">
-                                    <span class="vf-upload-num">1</span>
-                                    ID Front <span class="req">*</span>
-                                </div>
-                                <div class="upload-area-compact" id="frontUploadArea" data-upload-type="front">
-                                    <input type="file" class="form-control d-none" id="id_front_image"
-                                           name="id_front_image" accept="image/jpeg,image/png,image/jpg" required>
-                                    <label for="id_front_image" class="upload-label-compact">
-                                        <i class="bi bi-file-earmark-image"></i>
-                                        <p>Upload Front</p>
-                                        <small>JPG, PNG (Max 5MB)</small>
-                                    </label>
-                                    <div class="preview-container d-none">
-                                        <img id="frontPreview" alt="ID Front">
-                                        <button type="button" class="remove-image" data-target="front">
-                                            <i class="bi bi-x-lg"></i>
-                                        </button>
-                                        <span class="badge bg-success position-absolute top-0 start-0 m-1"
-                                              style="font-size:0.6rem">
-                                            <i class="bi bi-check-circle-fill"></i> Uploaded
-                                        </span>
-                                    </div>
-                                    <div class="invalid-feedback">Please upload the front side.</div>
-                                </div>
-                            </div>
-
-                            {{-- Back --}}
-                            <div>
-                                <div class="vf-upload-label-text">
-                                    <span class="vf-upload-num vf-upload-num-2">2</span>
-                                    ID Back <span class="req">*</span>
-                                </div>
-                                <div class="upload-area-compact" id="backUploadArea" data-upload-type="back">
-                                    <input type="file" class="form-control d-none" id="id_back_image"
-                                           name="id_back_image" accept="image/jpeg,image/png,image/jpg" required>
-                                    <label for="id_back_image" class="upload-label-compact">
-                                        <i class="bi bi-file-earmark-image"></i>
-                                        <p>Upload Back</p>
-                                        <small>JPG, PNG (Max 5MB)</small>
-                                    </label>
-                                    <div class="preview-container d-none">
-                                        <img id="backPreview" alt="ID Back">
-                                        <button type="button" class="remove-image" data-target="back">
-                                            <i class="bi bi-x-lg"></i>
-                                        </button>
-                                        <span class="badge bg-success position-absolute top-0 start-0 m-1"
-                                              style="font-size:0.6rem">
-                                            <i class="bi bi-check-circle-fill"></i> Uploaded
-                                        </span>
-                                    </div>
-                                    <div class="invalid-feedback">Please upload the back side.</div>
-                                </div>
-                            </div>
-
-                        </div>{{-- /.vf-upload-grid --}}
-
-                        {{-- Selfie --}}
+                        {{-- ID Image Upload --}}
                         <div class="vf-form-group">
-                            <div class="vf-upload-label-text">
-                                <span class="vf-upload-num vf-upload-num-3">3</span>
-                                Selfie with ID <span class="req">*</span>
-                            </div>
-                            <div class="vf-selfie-row">
-                                <div class="upload-area-compact vf-selfie-upload" id="selfieUploadArea" data-upload-type="selfie">
-                                    <input type="file" class="form-control d-none" id="selfie_with_id"
-                                           name="selfie_with_id" accept="image/jpeg,image/png,image/jpg" required>
-                                    <label for="selfie_with_id" class="upload-label-compact">
-                                        <i class="bi bi-camera-fill"></i>
-                                        <p>Upload Selfie</p>
-                                        <small>Hold ID next to your face</small>
-                                    </label>
-                                    <div class="preview-container d-none">
-                                        <img id="selfiePreview" alt="Selfie with ID">
-                                        <button type="button" class="remove-image" data-target="selfie">
-                                            <i class="bi bi-x-lg"></i>
-                                        </button>
-                                        <span class="badge bg-success position-absolute top-0 start-0 m-1"
-                                              style="font-size:0.6rem">
-                                            <i class="bi bi-check-circle-fill"></i> Uploaded
-                                        </span>
-                                    </div>
-                                    <div class="invalid-feedback">Please upload a selfie with ID.</div>
+                            <label class="vf-label">ID Image <span class="req">*</span></label>
+
+                            <div class="upload-area-compact" id="frontUploadArea">
+                                <input type="file" class="d-none" id="id_front_image"
+                                       name="id_front_image" accept="image/jpeg,image/png,image/jpg" required>
+
+                                {{-- Default label --}}
+                                <label for="id_front_image" class="upload-label-compact" id="uploadLabel">
+                                    <i class="bi bi-file-earmark-image fs-3"></i>
+                                    <p class="mb-0 mt-1">Click to upload your ID</p>
+                                    <small class="text-muted">JPG, PNG — Max 5 MB</small>
+                                </label>
+
+                                {{-- Preview (hidden until file chosen) --}}
+                                <div class="preview-container d-none" id="frontPreviewContainer">
+                                    <img id="frontPreview" alt="ID Preview"
+                                         style="max-width:100%; max-height:200px; border-radius:8px; object-fit:contain;">
+                                    <button type="button" class="remove-image mt-2 btn btn-sm btn-outline-danger"
+                                            id="removeImageBtn">
+                                        <i class="bi bi-x-lg me-1"></i> Remove
+                                    </button>
                                 </div>
 
-                                <div class="vf-selfie-guide">
-                                    <p class="vf-selfie-guide-title">
-                                        <i class="bi bi-info-circle-fill" style="color:var(--vf-primary)"></i>
-                                        Selfie Guide
-                                    </p>
-                                    <ul>
-                                        <li>Face clearly visible</li>
-                                        <li>Hold ID beside face</li>
-                                        <li>Good lighting</li>
-                                        <li>No filters or edits</li>
-                                    </ul>
-                                </div>
+                                <div class="invalid-feedback">Please upload your ID image.</div>
                             </div>
                         </div>
 
@@ -369,7 +274,7 @@
                         {{-- Upload progress --}}
                         <div class="vf-upload-progress d-none" id="uploadProgressContainer">
                             <div class="vf-upload-progress-head">
-                                <span>Uploading documents…</span>
+                                <span>Uploading document…</span>
                                 <span id="uploadProgressText">0%</span>
                             </div>
                             <div class="vf-upload-bar-wrap">
@@ -411,4 +316,3 @@
 
 <script src="{{ asset('assets/js/client/verification/profiling_save_update.js') }}"></script>
 <script src="{{ asset('assets/js/client/verification/verification_store.js') }}"></script>
-<script src="{{ asset('assets/js/client/verification/index.js') }}"></script>
