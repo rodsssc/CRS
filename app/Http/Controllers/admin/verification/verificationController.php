@@ -21,24 +21,25 @@ class VerificationController extends Controller
     public function index(Request $request): \Illuminate\View\View
     {
         $search  = trim((string) $request->query('q', ''));
+        $q       = $search; // keep backward compatible name used in Blade
         $status  = $request->query('status');
         $perPage = (int) $request->query('per_page', 10);
         $perPage = max(5, min(100, $perPage));
 
-        // ── Base query — join through verification so we can order by submitted_at ──
+        // ── Base query ───────────────────────────────────────────────────────────
+        // Avoid join-based ordering to keep pagination COUNT queries stable at
+        // scale (the join + correlated latest-verification lookup can cause
+        // heavy SQL / inflated result counts).
         $query = Client_profile::with('user.latestVerification')
-            ->join('users', 'client_profiles.client_id', '=', 'users.id')
-            ->leftJoin('client_verifications', function ($join) {
-                $join->on('client_verifications.client_id', '=', 'users.id')
-                     ->whereRaw('client_verifications.id = (
-                         SELECT id FROM client_verifications cv
-                         WHERE cv.client_id = users.id
-                         ORDER BY submitted_at DESC
-                         LIMIT 1
-                     )');
-            })
-            ->select('client_profiles.*')
-            ->orderByRaw('COALESCE(client_verifications.submitted_at, client_profiles.created_at) DESC');
+            ->orderByRaw(
+                "COALESCE((
+                    SELECT cv.submitted_at
+                    FROM client_verifications cv
+                    WHERE cv.client_id = client_profiles.client_id
+                    ORDER BY cv.submitted_at DESC
+                    LIMIT 1
+                ), client_profiles.created_at) DESC"
+            );
 
         // ── Search by name, email, or phone ──────────────────────────────────
         if ($search !== '') {
@@ -75,6 +76,7 @@ class VerificationController extends Controller
             'pendingCount',
             'rejectedCount',
             'search',
+            'q',
             'status',
             'perPage'
         ));

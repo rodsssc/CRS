@@ -44,13 +44,12 @@ class UserController extends Controller
         $users = $query->orderByDesc('created_at')->paginate($perPage)->withQueryString();
 
         // Stats always from full table (unaffected by search/filter)
-        $allUsers = User::all();
         $stats = [
-            'total'  => $allUsers->count(),
-            'admin'  => $allUsers->where('role', 'admin')->count(),
-            'owner'  => $allUsers->where('role', 'owner')->count(),
-            'staff'  => $allUsers->where('role', 'staff')->count(),
-            'client' => $allUsers->where('role', 'client')->count(),
+            'total'  => User::count(),
+            'admin'  => User::where('role', 'admin')->count(),
+            'owner'  => User::where('role', 'owner')->count(),
+            'staff'  => User::where('role', 'staff')->count(),
+            'client' => User::where('role', 'client')->count(),
         ];
 
         return view('admin.user.user', compact(

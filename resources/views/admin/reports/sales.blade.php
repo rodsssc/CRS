@@ -180,7 +180,9 @@
             </table>
         </div>
         <div style="padding: .5rem 1rem .75rem;">
-            {{ $payments->links() }}
+            @if($payments->hasPages())
+                {{ $payments->onEachSide(1)->links('pagination::bootstrap-5') }}
+            @endif
         </div>
     </div>
 

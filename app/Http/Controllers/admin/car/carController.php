@@ -68,13 +68,12 @@ class carController extends Controller
         $cars = $query->orderByDesc('created_at')->paginate($perPage)->withQueryString();
 
         // Stats always from full table (unaffected by search/filter)
-        $allCars = Car::all();
         $stats = [
-            'total'       => $allCars->count(),
-            'available'   => $allCars->where('status', 'available')->count(),
-            'rented'      => $allCars->where('status', 'rented')->count(),
-            'maintenance' => $allCars->where('status', 'maintenance')->count(),
-            'unavailable' => $allCars->where('status', 'unavailable')->count(),
+            'total'       => Car::count(),
+            'available'   => Car::where('status', 'available')->count(),
+            'rented'      => Car::where('status', 'rented')->count(),
+            'maintenance' => Car::where('status', 'maintenance')->count(),
+            'unavailable' => Car::where('status', 'unavailable')->count(),
         ];
 
         // Owners for add/edit dropdowns

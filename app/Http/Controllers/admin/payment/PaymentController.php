@@ -63,13 +63,12 @@ class PaymentController extends Controller
         }
 
         // Global stats
-        $allPayments = Payment::all();
         $stats = [
-            'total'        => $allPayments->count(),
-            'completed'    => $allPayments->where('status', 'completed')->count(),
-            'pending'      => $allPayments->where('status', 'pending')->count(),
-            'failed'       => $allPayments->where('status', 'failed')->count(),
-            'total_amount' => $allPayments->sum('amount'),
+            'total'        => Payment::count(),
+            'completed'    => Payment::where('status', 'completed')->count(),
+            'pending'      => Payment::where('status', 'pending')->count(),
+            'failed'       => Payment::where('status', 'failed')->count(),
+            'total_amount' => (float) Payment::sum('amount'),
         ];
 
         // Rentals available for payment recording (pending or ongoing only)

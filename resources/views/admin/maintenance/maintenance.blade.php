@@ -87,10 +87,10 @@
                     </div>
                 </div>
 
-                {{-- Search & Clear --}}
+                    {{-- Search & Clear --}}
                 <div class="col-auto d-flex gap-2">
                     <button class="btn btn-primary btn-sm" type="submit">Search</button>
-                    <a class="btn btn-outline-secondary btn-sm" href="{{ route('admin.payment.index') }}">Clear</a>
+                        <a class="btn btn-outline-secondary btn-sm" href="{{ route('admin.maintenance.index') }}">Clear</a>
                 </div>
 
                 {{-- Status Filter --}}
@@ -182,16 +182,21 @@
             </div>
 
             <div class="table-footer">
-                <div class="showing-entries">
-                    @if ($maintenances->total() > 0)
-                        Showing {{ $maintenances->firstItem() }}-{{ $maintenances->lastItem() }} of {{ $maintenances->total() }}
-                    @else
-                        Showing 0 of 0
-                    @endif
-                </div>
-                <div>
-                    {{ $maintenances->links() }}
-                </div>
+                @if ($maintenances->hasPages())
+                    <div class="d-flex justify-content-between align-items-center px-3 py-2 border-top">
+                        <div class="text-muted small">
+                            Showing {{ $maintenances->firstItem() }}-{{ $maintenances->lastItem() }}
+                            of {{ $maintenances->total() }} record(s)
+                        </div>
+                        <div>
+                            {{ $maintenances->onEachSide(1)->links('pagination::bootstrap-5') }}
+                        </div>
+                    </div>
+                @else
+                    <div class="px-3 py-2 border-top text-muted small">
+                        {{ $maintenances->total() }} record(s) found
+                    </div>
+                @endif
             </div>
         </div>
     </div>

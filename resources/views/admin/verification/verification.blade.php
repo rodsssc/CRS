@@ -169,24 +169,28 @@
 
             <!-- Footer -->
             <div class="table-footer mt-auto">
-                <div class="showing-entries">
-                    @if($clientProfile->total() > 0)
-                        Showing {{ $clientProfile->firstItem() }}–{{ $clientProfile->lastItem() }}
-                        of {{ $clientProfile->total() }}
-                    @else
-                        Showing 0 of 0
-                    @endif
-                </div>
-                <div>
-                    {{ $clientProfile->links() }}
-                </div>
+                @if($clientProfile->hasPages())
+                    <div class="d-flex justify-content-between align-items-center px-3 py-2 border-top">
+                        <div class="text-muted small">
+                            Showing {{ $clientProfile->firstItem() }}–{{ $clientProfile->lastItem() }}
+                            of {{ $clientProfile->total() }} record(s)
+                        </div>
+                        <div>
+                            {{ $clientProfile->onEachSide(1)->links('pagination::bootstrap-5') }}
+                        </div>
+                    </div>
+                @else
+                    <div class="px-3 py-2 border-top text-muted small">
+                        {{ $clientProfile->total() }} record(s) found
+                    </div>
+                @endif
             </div>
 
         </div>
     </div>
 </x-app-layout>
 
-<script src="{{ asset('assets/js/admin/verification/verification.js') }}"></script>
+<script src="{{ asset('assets/js/admin/verification/admin_verification_actions.js') }}"></script>
 
 
 {{-- ═══════════════════════════════════════════════════════════════
@@ -463,15 +467,4 @@
     </div>
 </div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const rejectionInput = document.getElementById('rejectionReasonInput');
-        const charCount     = document.getElementById('rejectionCharCount');
-
-        if (rejectionInput && charCount) {
-            rejectionInput.addEventListener('input', function () {
-                charCount.textContent = this.value.length;
-            });
-        }
-    });
-</script>
+{{-- Inline script removed: char counter is handled by admin_verification_actions.js --}}
