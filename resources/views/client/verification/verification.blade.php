@@ -148,8 +148,7 @@
                                 <div class="vf-input-wrap">
                                     <span class="vf-input-icon"><i class="bi bi-telephone"></i></span>
                                     <input type="tel" class="vf-input" id="emergencyContactPhone"
-                                           name="emergencyContactPhone" required placeholder="+63 XXX XXX XXXX"
-                                           pattern="[0-9+()\- ]+">
+                                         name="emergencyContactPhone" required placeholder="+63 XXX XXX XXXX">
                                 </div>
                                 <div class="invalid-feedback">Please enter a valid phone number.</div>
                             </div>
@@ -313,6 +312,6 @@
 </div>
 </div>
 </x-app-layout>
-
-<script src="{{ asset('assets/js/client/verification/profiling_save_update.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="{{ asset('assets/js/client/verification/verification_store.js') }}"></script>
+<script src="{{ asset('assets/js/client/verification/profiling_save_update.js') }}"></script>

@@ -1,394 +1,383 @@
-// assets/js/admin/verification/verification.js
-// Merged: show.js + approve.js + reject.js - With Bootstrap Reject Modal
-
 document.addEventListener('DOMContentLoaded', function() {
+    // ─── Elements ────────────────────────────────────────────────────────────────
+    const frontUploadArea = document.getElementById('frontUploadArea');
+    const frontEl = document.getElementById('id_front_image');
+    const frontPreview = document.getElementById('frontPreview');
+    const frontPreviewContainer = document.getElementById('frontPreviewContainer');
+    const uploadLabel = document.getElementById('uploadLabel');
+    const removeImageBtn = document.getElementById('removeImageBtn');
+    const verificationForm = document.getElementById('verificationForm');
 
-    // =========================================================
-    // CSRF TOKEN HELPER
-    // =========================================================
-    window.getCsrfToken = function() {
-        const meta = document.querySelector('meta[name="csrf-token"]');
-        return meta ? meta.getAttribute('content') : '';
-    };
+    // Safely get the submit URL from meta tag or use default
+    let submitUrl = '/client/verification/submit';
+    const metaUrl = document.querySelector('meta[name="verification-submit-url"]');
+    if (metaUrl && metaUrl.content) {
+        submitUrl = metaUrl.content;
+    }
 
-    // =========================================================
-    // BOOTSTRAP MODAL SETUP
-    // =========================================================
-    const modalEl = document.getElementById('viewVerificationModal');
-    const modal = new bootstrap.Modal(modalEl);
-    const approveBtn = document.getElementById('approveVerificationBtn');
-    const rejectBtn = document.getElementById('rejectVerificationBtn');
+    // Safely get CSRF token
+    let csrfToken = '';
+    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    if (csrfMeta && csrfMeta.content) {
+        csrfToken = csrfMeta.content;
+    }
 
-    // Reject Modal Elements
-    const rejectModalEl = document.getElementById('rejectVerificationModal');
-    const rejectModal = rejectModalEl ? new bootstrap.Modal(rejectModalEl) : null;
-    const confirmRejectBtn = document.getElementById('confirmRejectBtn');
-    const cancelRejectBtn = document.getElementById('cancelRejectBtn');
-    const rejectionReasonInput = document.getElementById('rejectionReasonInput');
-    const rejectionVerificationId = document.getElementById('rejectionVerificationId');
+    // Check if we're on the verification page (if upload area doesn't exist, exit)
+    if (!frontUploadArea) return;
 
-    // =========================================================
-    // VIEW BUTTON — delegated click
-    // =========================================================
-    document.addEventListener('click', function(e) {
-        const viewBtn = e.target.closest('.btn-action[title="View"]');
-        if (!viewBtn) return;
+    // ─── Clear previous errors on input focus ─────────────────────────────────────
+    function clearFieldError(fieldId) {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.classList.remove('is-invalid');
+            const feedback = field.parentElement.querySelector('.invalid-feedback');
+            if (feedback) feedback.style.display = 'none';
+        }
+    }
 
-        const userId = viewBtn.getAttribute('data-user-id');
-        if (!userId) return;
+    // Add focus event listeners to clear errors
+    const idTypeEl = document.getElementById('id_type');
+    const idNumberEl = document.getElementById('idNumber');
 
-        fetch('/admin/verification/' + userId, {
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                }
-            })
-            .then(function(response) {
-                if (!response.ok) {
-                    return response.text().then(function(text) { throw new Error(text); });
-                }
-                return response.json();
-            })
-            .then(function(result) {
-                if (!result.success) {
-                    alert(result.message || 'Failed to load verification details.');
-                    return;
-                }
+    if (idTypeEl) {
+        idTypeEl.addEventListener('focus', () => clearFieldError('id_type'));
+    }
+    if (idNumberEl) {
+        idNumberEl.addEventListener('focus', () => clearFieldError('idNumber'));
+    }
+    if (frontEl) {
+        frontEl.addEventListener('focus', () => {
+            frontEl.classList.remove('is-invalid');
+            const feedback = frontUploadArea.querySelector('.invalid-feedback');
+            if (feedback) feedback.style.display = 'none';
+        });
+    }
 
-                populateModal(result.data);
-
-                var verificationId = result.data.id || '';
-
-                if (approveBtn) approveBtn.setAttribute('data-verification-id', verificationId);
-                if (rejectBtn) rejectBtn.setAttribute('data-verification-id', verificationId);
-
-                var noVerification = !verificationId || result.data.status === 'none';
-
-                if (approveBtn) {
-                    approveBtn.style.display = (noVerification || result.data.status === 'approved') ? 'none' : '';
-                }
-                if (rejectBtn) {
-                    rejectBtn.style.display = (noVerification || result.data.status === 'rejected') ? 'none' : '';
-                }
-
-                modal.show();
-            })
-            .catch(function(error) {
-                console.error('Verification fetch error:', error.message);
-                alert('Failed to load verification details. Check console for details.');
-            });
+    // ─── Upload Area Click ───────────────────────────────────────────────────────
+    frontUploadArea.addEventListener('click', (e) => {
+        // Don't re-trigger if clicking the remove button
+        if (e.target.closest('#removeImageBtn')) return;
+        // Don't re-trigger if preview is visible and click is on the image
+        if (!frontPreviewContainer.classList.contains('d-none')) return;
+        frontEl.click();
     });
 
-    // =========================================================
-    // TABLE REJECT BUTTON HANDLER
-    // =========================================================
-    document.addEventListener('click', function(e) {
-        const tableRejectBtn = e.target.closest('.btn-action[title="Reject"]');
-        if (tableRejectBtn) {
-            e.preventDefault();
-            const verificationId = tableRejectBtn.getAttribute('data-verification-id');
-            if (verificationId && rejectModal) {
-                // Clear previous input
-                if (rejectionReasonInput) rejectionReasonInput.value = '';
-                // Set the verification ID
-                if (rejectionVerificationId) rejectionVerificationId.value = verificationId;
-                // Show the modal
-                rejectModal.show();
+    // ─── Drag & Drop ─────────────────────────────────────────────────────────────
+    frontUploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        frontUploadArea.classList.add('drag-over');
+    });
+
+    frontUploadArea.addEventListener('dragleave', () => {
+        frontUploadArea.classList.remove('drag-over');
+    });
+
+    frontUploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        frontUploadArea.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        if (file) handleImageFile(file);
+    });
+
+    // ─── File Input Change ───────────────────────────────────────────────────────
+    frontEl.addEventListener('change', () => {
+        const file = frontEl.files[0];
+        if (file) handleImageFile(file);
+    });
+
+    // ─── Remove Image ─────────────────────────────────────────────────────────────
+    if (removeImageBtn) {
+        removeImageBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            resetUpload();
+        });
+    }
+
+    // ─── Helpers ─────────────────────────────────────────────────────────────────
+    function handleImageFile(file) {
+        const allowed = ['image/jpeg', 'image/jpg', 'image/png'];
+
+        if (!allowed.includes(file.type)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid File',
+                text: 'Only JPG and PNG images are allowed.'
+            });
+            resetUpload();
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            Swal.fire({
+                icon: 'error',
+                title: 'File Too Large',
+                text: 'Image must be under 5MB.'
+            });
+            resetUpload();
+            return;
+        }
+
+        // If file came from drag-drop, transfer it to the real input
+        if (!frontEl.files[0] || frontEl.files[0] !== file) {
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            frontEl.files = dt.files;
+        }
+
+        // Show preview, hide label
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            frontPreview.src = e.target.result;
+            frontPreviewContainer.classList.remove('d-none');
+            uploadLabel.classList.add('d-none');
+            frontUploadArea.classList.add('has-image');
+        };
+        reader.readAsDataURL(file);
+
+        // Clear any previous file error
+        frontEl.classList.remove('is-invalid');
+    }
+
+    function resetUpload() {
+        frontEl.value = '';
+        frontPreview.src = '';
+        frontPreviewContainer.classList.add('d-none');
+        uploadLabel.classList.remove('d-none');
+        frontUploadArea.classList.remove('has-image');
+    }
+
+    // ─── Display Field Errors ────────────────────────────────────────────────────
+    function displayFieldErrors(errors) {
+        // Clear all existing errors first
+        document.querySelectorAll('.is-invalid').forEach(el => {
+            el.classList.remove('is-invalid');
+        });
+        document.querySelectorAll('.invalid-feedback').forEach(el => {
+            el.style.display = 'none';
+        });
+
+        // Display new errors
+        if (errors.id_type) {
+            const field = document.getElementById('id_type');
+            if (field) {
+                field.classList.add('is-invalid');
+                const feedback = field.parentElement.querySelector('.invalid-feedback');
+                if (feedback) {
+                    feedback.textContent = errors.id_type[0];
+                    feedback.style.display = 'block';
+                }
             }
         }
-    });
 
-    // =========================================================
-    // APPROVE BUTTON
-    // =========================================================
-    if (approveBtn) {
-        approveBtn.addEventListener('click', function() {
-            var verificationId = this.getAttribute('data-verification-id');
-            if (!verificationId) {
-                console.error('No verification ID on approve button');
-                return;
-            }
-
-            Swal.fire({
-                title: 'Approve Verification?',
-                text: 'This action will mark this client as verified.',
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#198754',
-                cancelButtonColor: '#6c757d',
-                confirmButtonText: 'Yes, Approve',
-                cancelButtonText: 'Cancel'
-            }).then(function(result) {
-                if (result.isConfirmed) {
-                    approveVerification(verificationId);
+        if (errors.id_number) {
+            const field = document.getElementById('idNumber');
+            if (field) {
+                field.classList.add('is-invalid');
+                const feedback = field.parentElement.querySelector('.invalid-feedback');
+                if (feedback) {
+                    feedback.textContent = errors.id_number[0];
+                    feedback.style.display = 'block';
                 }
-            });
-        });
+            }
+        }
+
+        if (errors.id_front_image) {
+            const field = document.getElementById('id_front_image');
+            if (field) {
+                field.classList.add('is-invalid');
+                const feedback = frontUploadArea.querySelector('.invalid-feedback');
+                if (feedback) {
+                    feedback.textContent = errors.id_front_image[0];
+                    feedback.style.display = 'block';
+                }
+            }
+        }
+
+        if (errors.general) {
+            // General errors are shown in Swal
+            return errors.general[0];
+        }
+
+        return null;
     }
 
-    // =========================================================
-    // REJECT BUTTON (in view modal)
-    // =========================================================
-    if (rejectBtn) {
-        rejectBtn.addEventListener('click', function() {
-            var verificationId = this.getAttribute('data-verification-id');
-            if (!verificationId) {
-                console.error('No verification ID on reject button');
-                return;
-            }
+    // ─── Form Submit ──────────────────────────────────────────────────────────────────
+    if (verificationForm) {
+        verificationForm.addEventListener('submit', async(e) => {
+            e.preventDefault();
 
-            if (rejectModal) {
-                // Clear previous input
-                if (rejectionReasonInput) rejectionReasonInput.value = '';
-                // Set the verification ID
-                if (rejectionVerificationId) rejectionVerificationId.value = verificationId;
-                // Hide the view modal and show reject modal
-                modal.hide();
-                setTimeout(() => {
-                    rejectModal.show();
-                }, 500);
-            }
-        });
-    }
+            const idTypeEl = document.getElementById('id_type');
+            const idNumberEl = document.getElementById('idNumber');
+            const consentEl = document.getElementById('verificationConsent');
 
-    // =========================================================
-    // CONFIRM REJECT BUTTON
-    // =========================================================
-    if (confirmRejectBtn) {
-        confirmRejectBtn.addEventListener('click', function() {
-            const verificationId = rejectionVerificationId ? rejectionVerificationId.value : null;
-            const rejectionReason = rejectionReasonInput ? rejectionReasonInput.value : '';
-
-            if (!verificationId) {
+            // Guard: all elements must exist
+            if (!idTypeEl || !idNumberEl || !frontEl || !consentEl) {
+                console.error('One or more form elements not found. Check your input IDs.');
                 Swal.fire({
                     icon: 'error',
-                    title: 'Error',
-                    text: 'No verification ID found'
+                    title: 'Form Error',
+                    text: 'Form elements missing. Please refresh the page.'
                 });
                 return;
             }
 
-            // Close reject modal
-            if (rejectModal) rejectModal.hide();
+            const idType = idTypeEl.value.trim();
+            const idNumber = idNumberEl.value.trim();
+            const front = frontEl.files[0];
+            const consent = consentEl.checked;
 
-            // Process rejection
-            processRejection(verificationId, rejectionReason);
-        });
-    }
+            // ── Validation ──
+            let hasError = false;
 
-    // =========================================================
-    // CANCEL REJECT BUTTON
-    // =========================================================
-    if (cancelRejectBtn) {
-        cancelRejectBtn.addEventListener('click', function() {
-            if (rejectModal) rejectModal.hide();
-        });
-    }
-
-    // =========================================================
-    // PROCESS REJECTION
-    // =========================================================
-    async function processRejection(verificationId, rejectionReason) {
-        Swal.fire({
-            title: 'Rejecting...',
-            text: 'Please wait while we process the rejection.',
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            didOpen: () => { Swal.showLoading(); }
-        });
-
-        try {
-            const response = await fetch('/admin/verification/' + verificationId + '/reject', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': getCsrfToken(),
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-                body: JSON.stringify({ rejection_reason: rejectionReason }),
-            });
-
-            const result = await response.json();
-
-            if (!response.ok || !result.success) {
-                throw new Error(result.message || 'Rejection failed');
+            if (!idType) {
+                Swal.fire({ icon: 'error', title: 'Missing Field', text: 'Please select an ID type.' });
+                hasError = true;
+            } else if (!idNumber) {
+                Swal.fire({ icon: 'error', title: 'Missing Field', text: 'Please enter your ID number.' });
+                hasError = true;
+            } else if (!front) {
+                Swal.fire({ icon: 'error', title: 'Missing Document', text: 'Please upload your ID image.' });
+                hasError = true;
+            } else if (!consent) {
+                Swal.fire({ icon: 'warning', title: 'Consent Required', text: 'Please agree to the terms before submitting.' });
+                hasError = true;
             }
 
-            // Update UI if view modal is open
-            updateStatusBadge('rejected');
+            if (hasError) return;
 
-            const rejectionSection = document.getElementById('rejectionReasonSection');
-            const rejectionReasonText = document.getElementById('viewRejectionReason');
+            const formData = new FormData();
+            formData.append('id_type', idType);
+            formData.append('id_number', idNumber);
+            formData.append('id_front_image', front);
 
-            if (rejectionSection && rejectionReasonText) {
-                rejectionReasonText.textContent = result.data.rejection_reason || rejectionReason || 'Rejected by admin';
-                rejectionSection.style.display = 'block';
-            }
+            // ── Show progress bar ──
+            const progressContainer = document.getElementById('uploadProgressContainer');
+            const progressBar = document.getElementById('uploadProgressBar');
+            const progressText = document.getElementById('uploadProgressText');
 
-            const verifiedAtEl = document.getElementById('viewVerifiedAt');
-            const verifiedByEl = document.getElementById('viewVerifiedBy');
+            if (progressContainer) progressContainer.classList.remove('d-none');
 
-            if (verifiedAtEl && result.data.verified_at) verifiedAtEl.textContent = result.data.verified_at;
-            if (verifiedByEl && result.data.verified_by) verifiedByEl.textContent = result.data.verified_by;
-
-            // Hide buttons in view modal
-            if (approveBtn) approveBtn.style.display = 'none';
-            if (rejectBtn) rejectBtn.style.display = 'none';
-
-            // Show success message
-            await Swal.fire({
-                icon: 'success',
-                title: 'Rejected!',
-                text: result.message || 'Verification has been rejected.',
-                toast: true,
-                position: 'top-end',
-                timer: 2000,
-                timerProgressBar: true,
-                showConfirmButton: false
-            });
-
-            // Reload page after toast closes
-            setTimeout(() => {
-                window.location.reload();
-            }, 2000);
-
-        } catch (error) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Rejection Failed',
-                text: error.message || 'Something went wrong. Please try again.',
-                confirmButtonColor: '#dc3545'
-            });
-        }
-    }
-
-    // =========================================================
-    // POPULATE MODAL FIELDS
-    // =========================================================
-    function populateModal(data) {
-        setText('viewClientFirstName', data.first_name);
-        setText('viewClientLastName', data.last_name);
-        setText('viewClientEmail', data.email);
-        setText('viewClientPhone', data.phone);
-        setText('viewClientDateBirth', data.date_birth);
-        setText('viewClientAddress', data.address);
-        setText('viewClientNationality', data.nationality);
-        setText('viewClientFacebook', data.facebook_name);
-        setText('viewEmergencyName', data.emergency_contact_name);
-        setText('viewEmergencyPhone', data.emergency_contact_phone);
-        setText('viewIdType', data.id_type);
-        setText('viewIdNumber', data.id_number);
-        setText('viewSubmittedAt', data.submitted_at);
-        setText('viewVerifiedAt', data.verified_at);
-        setText('viewVerifiedBy', data.verified_by);
-
-        setImage('viewIdFrontImage', data.id_front_image);
-        setImage('viewIdBackImage', data.id_back_image);
-        setImage('viewSelfieImage', data.selfie_image);
-
-        var statusBadge = document.getElementById('viewVerificationStatus');
-        if (statusBadge) {
-            var s = data.status || 'none';
-            statusBadge.textContent = s.charAt(0).toUpperCase() + s.slice(1);
-            statusBadge.className = 'status-tag status-' + s;
-        }
-
-        var rejectionSection = document.getElementById('rejectionReasonSection');
-        if (rejectionSection) {
-            if (data.rejection_reason) {
-                setText('viewRejectionReason', data.rejection_reason);
-                rejectionSection.style.display = 'block';
-            } else {
-                rejectionSection.style.display = 'none';
-            }
-        }
-    }
-
-    // =========================================================
-    // HELPERS
-    // =========================================================
-    function setText(id, value) {
-        var el = document.getElementById(id);
-        if (!el) return;
-        el.textContent = (value !== null && value !== undefined && value !== '') ? value : '—';
-    }
-
-    function setImage(id, src) {
-        var el = document.getElementById(id);
-        if (el && src) el.src = src;
-    }
-
-    // =========================================================
-    // APPROVE VERIFICATION FUNCTION
-    // =========================================================
-    async function approveVerification(verificationId) {
-        Swal.fire({
-            title: 'Approving...',
-            text: 'Please wait while we process the verification.',
-            allowOutsideClick: false,
-            allowEscapeKey: false,
-            didOpen: function() { Swal.showLoading(); }
-        });
-
-        try {
-            var response = await fetch('/admin/verification/' + verificationId + '/approve', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': getCsrfToken(),
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest',
+            // Simulate progress while uploading
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                if (progress < 85) {
+                    progress += Math.random() * 12;
+                    progress = Math.min(progress, 85);
+                    if (progressBar) progressBar.style.width = progress + '%';
+                    if (progressText) progressText.textContent = Math.round(progress) + '%';
                 }
+            }, 200);
+
+            Swal.fire({
+                title: 'Submitting...',
+                text: 'Please wait while we upload your documents.',
+                allowOutsideClick: false,
+                showConfirmButton: false,
+                didOpen: () => Swal.showLoading(),
             });
 
-            var result = await response.json();
+            try {
+                const response = await fetch(submitUrl, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': getCsrfToken(),
+                        'Accept': 'application/json',
+                    },
+                    body: formData,
+                });
 
-            if (!response.ok || !result.success) {
-                throw result;
+                const data = await response.json();
+
+                // Complete progress bar
+                clearInterval(progressInterval);
+                if (progressBar) progressBar.style.width = '100%';
+                if (progressText) progressText.textContent = '100%';
+
+                Swal.close();
+
+                if (!response.ok) {
+                    if (progressContainer) progressContainer.classList.add('d-none');
+
+                    // Check if there are field-specific errors
+                    if (data.errors) {
+                        // Display field-specific errors
+                        const generalError = displayFieldErrors(data.errors);
+
+                        // Get the main error message
+                        let errorMessage = data.message || 'Please check the form for errors.';
+
+                        // If there's a specific field error with a message, use that
+                        if (data.errors.id_number) {
+                            errorMessage = data.errors.id_number[0];
+                        } else if (data.errors.id_type) {
+                            errorMessage = data.errors.id_type[0];
+                        } else if (data.errors.id_front_image) {
+                            errorMessage = data.errors.id_front_image[0];
+                        }
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Submission Failed',
+                            text: errorMessage,
+                            confirmButtonText: 'OK'
+                        });
+                        return;
+                    }
+
+                    // General error without field specifics
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.message || 'Something went wrong. Please try again.'
+                    });
+                    return;
+                }
+
+                // Success - clear any existing errors
+                displayFieldErrors({});
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Verification Submitted!',
+                    text: data.message || 'Your documents have been sent. Please wait for admin approval.',
+                    timer: 2000,
+                    timerProgressBar: true,
+                    showConfirmButton: true,
+                    confirmButtonText: 'OK'
+                }).then((result) => {
+                    if (result.isConfirmed || result.dismiss === Swal.DismissReason.timer) {
+                        if (data.redirect) {
+                            document.body.classList.add('fade-out');
+                            setTimeout(() => {
+                                window.location.href = data.redirect;
+                            }, 500);
+                        } else {
+                            // Reload the page to show updated status
+                            window.location.reload();
+                        }
+                    }
+                });
+
+            } catch (err) {
+                clearInterval(progressInterval);
+                if (progressContainer) progressContainer.classList.add('d-none');
+                Swal.close();
+
+                console.error('Verification submit error:', err);
+
+                let errorMessage = 'An unexpected error occurred. Please check your connection and try again.';
+
+                if (err.message) {
+                    errorMessage = err.message;
+                }
+
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Connection Error',
+                    text: errorMessage,
+                    confirmButtonText: 'Try Again'
+                });
             }
-
-            updateStatusBadge('approved');
-
-            var verifiedAtEl = document.getElementById('viewVerifiedAt');
-            var verifiedByEl = document.getElementById('viewVerifiedBy');
-            if (verifiedAtEl && result.data.verified_at) verifiedAtEl.textContent = result.data.verified_at;
-            if (verifiedByEl && result.data.verified_by) verifiedByEl.textContent = result.data.verified_by;
-
-            var approveBtn = document.getElementById('approveVerificationBtn');
-            var rejectBtn = document.getElementById('rejectVerificationBtn');
-            if (approveBtn) approveBtn.style.display = 'none';
-            if (rejectBtn) rejectBtn.style.display = 'none';
-
-            Swal.fire({
-                icon: 'success',
-                title: 'Approved!',
-                text: result.message || 'Verification approved successfully.',
-                toast: true,
-                position: 'top-end',
-                timer: 2000,
-                timerProgressBar: true,
-                showConfirmButton: false
-            }).then(function() { window.location.reload(); });
-
-        } catch (error) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Approval Failed',
-                text: error.message || 'Something went wrong. Please try again.',
-                confirmButtonColor: '#dc3545'
-            });
-        }
+        });
     }
-
-    // =========================================================
-    // UPDATE STATUS BADGE
-    // =========================================================
-    function updateStatusBadge(status) {
-        var badge = document.getElementById('viewVerificationStatus');
-        if (!badge) return;
-        badge.textContent = status.charAt(0).toUpperCase() + status.slice(1);
-        badge.className = 'status-tag status-' + status;
-    }
-
 });

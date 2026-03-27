@@ -47,12 +47,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/home', fn () => view('client.home'))->name('home');
 
         Route::prefix('verification')->name('verification.')->group(function () {
-            Route::get('/',             [clientVerificationController::class, 'index']) ->name('index');
-            Route::post('/verification',[clientVerificationController::class, 'store']) ->name('verification.store');
-            Route::get('/profile/{id}', [clientProfileController::class,      'show'])  ->name('profile.show');
-            Route::post('/profile',     [clientProfileController::class,      'store']) ->name('profile.store');
-            Route::put('/profile/{id}', [clientProfileController::class,      'update'])->name('profile.update');
-        });
+        // Verification routes
+        Route::get('/',[clientVerificationController::class, 'index']) ->name('index');
+        Route::post('/submit', [clientVerificationController::class, 'store']);  // Changed from '/verification' to '/submit'
+        
+        // Profile routes (profiling)
+        Route::get('/profile/{id}',[clientProfileController::class, 'show'])      ->name('profile.show');
+        Route::post('/profile',[clientProfileController::class, 'store'])     ->name('profile.store');
+        Route::put('/profile/{id}',[clientProfileController::class, 'update'])    ->name('profile.update');
+    });
 
         Route::middleware('verified.client')->group(function () {
 
