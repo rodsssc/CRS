@@ -1,6 +1,6 @@
 /* ════════════════════════════════════════════════════════════════
    BjCarRental · Verification & Profiling — verification.css
-   Mobile-first, drop-in replacement
+   Complete file — mobile-compatible, production-ready
    ════════════════════════════════════════════════════════════════ */
 
 @import url('https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500;600&display=swap');
@@ -497,8 +497,17 @@
     background: var(--vf-success);
 }
 
+
+/* ─────────────────────────────────────────────────────────────────
+   Upload card
+   FIX: position:relative is explicit here so the safe-hidden file
+   input (position:absolute) is contained within the card and does
+   not bleed out into the surrounding layout.
+───────────────────────────────────────────────────────────────── */
+
 .upload-area-compact {
     position: relative;
+    /* contains .vf-file-input-hidden */
     border: 2px dashed var(--vf-border-2);
     border-radius: var(--vf-radius-sm);
     padding: 1rem 0.75rem;
@@ -510,27 +519,101 @@
     justify-content: center;
     background: var(--vf-surface);
     cursor: pointer;
+    /* FIX: prevent iOS double-tap zoom when tapping the card */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.upload-area-compact:hover {
-    border-color: var(--vf-primary);
-    background: var(--vf-primary-soft);
-}
-
+.upload-area-compact:hover,
 .upload-area-compact.drag-over {
     border-color: var(--vf-primary);
     background: var(--vf-primary-soft);
 }
 
-.upload-area-compact.has-file {
+.upload-area-compact.has-image {
     border-color: var(--vf-success);
     background: var(--vf-success-soft);
 }
 
+
+/* ── Invalid state for the upload card ───────────────────────────
+   Triggered when JS adds is-invalid to the file input or
+   is-invalid-area to the card (fallback for browsers without :has())
+*/
+
+.upload-area-compact.is-invalid-area {
+    border-color: var(--vf-danger);
+    background: rgba(220, 38, 38, 0.04);
+}
+
+
+/* :has() — supported in all modern mobile browsers (iOS 15.4+, Chrome 105+) */
+
+.upload-area-compact:has(#id_front_image.is-invalid) {
+    border-color: var(--vf-danger);
+    background: rgba(220, 38, 38, 0.04);
+}
+
+
+/* ─────────────────────────────────────────────────────────────────
+   Safe-hidden file input
+   ─────────────────────────────────────────────────────────────────
+   WHY NOT display:none:
+     • Mobile browsers (iOS Safari, Chrome Android) EXCLUDE display:none
+       inputs from HTML5 constraint validation — so `required` is
+       silently ignored and no "please fill in this field" bubble appears.
+     • Programmatic input.click() on a display:none element is blocked
+       by iOS Safari as an unsolicited popup (not a real user gesture).
+
+   THIS APPROACH instead:
+     • opacity:0         — invisible to the eye
+     • position:absolute — removed from normal flow, zero visual footprint
+     • width/height:1px  — smallest possible paint area
+     • pointer-events:none — clicks pass through to the label underneath
+     • clip-path/clip    — belt-and-suspenders for assistive-tech hiding
+     • NO display:none   — stays in the a11y + validation tree
+
+   Applied by JS: frontEl.classList.add('vf-file-input-hidden')
+   after removing Bootstrap's d-none class.
+───────────────────────────────────────────────────────────────── */
+
+.vf-file-input-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    overflow: hidden;
+    pointer-events: none;
+    white-space: nowrap;
+    clip: rect(0 0 0 0);
+    /* legacy browsers  */
+    clip-path: inset(50%);
+    /* modern browsers  */
+    /* intentionally no display:none — keeps required in validation tree */
+}
+
+
+/* ─────────────────────────────────────────────────────────────────
+   Upload label (the visible card content + file picker trigger)
+   ─────────────────────────────────────────────────────────────────
+   FIX: The label must fill the entire card so a tap anywhere on the
+   card opens the file picker — critical for mobile usability.
+   Negative margins expand it to the card's padding edges; matching
+   positive padding restores the inner spacing.
+───────────────────────────────────────────────────────────────── */
+
 .upload-label-compact {
-    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     width: 100%;
+    min-height: inherit;
+    cursor: pointer;
     margin: 0;
+    /* FIX: prevent iOS double-tap zoom on the label */
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .upload-label-compact .bi {
@@ -584,10 +667,29 @@
     background: rgba(220, 38, 38, 0.9);
     color: #fff;
     cursor: pointer;
+    /* FIX: ensure remove button tap area is comfortable on mobile */
+    min-width: 36px;
+    min-height: 30px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .upload-area-compact .remove-image:hover {
     background: var(--vf-danger);
+}
+
+
+/* Invalid feedback text inside the upload card */
+
+.upload-area-compact .invalid-feedback {
+    /* Bootstrap sets this to display:none by default — we keep that
+       and only show it via JS (feedback.style.display = 'block') */
+    font-size: 0.72rem;
+    color: var(--vf-danger);
+    margin-top: 0.35rem;
+    position: relative;
+    /* lifts out of absolute stacking context */
+    z-index: 2;
 }
 
 
@@ -727,7 +829,7 @@
 }
 
 
-/* Base button — reset all browser defaults first */
+/* Base button */
 
 .vf-btn {
     display: inline-flex;
@@ -742,15 +844,16 @@
     font-weight: 600;
     letter-spacing: 0.015em;
     cursor: pointer;
-    /* Explicit border on every variant — avoids cascade conflicts */
     border: 2px solid transparent;
     outline: none;
     transition: background var(--vf-transition), border-color var(--vf-transition), color var(--vf-transition), transform var(--vf-transition), box-shadow var(--vf-transition);
     white-space: nowrap;
+    /* FIX: mobile tap quality */
+    touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     text-decoration: none;
-    /* On mobile: full width for easy tapping */
     width: 100%;
+    /* full-width on mobile by default */
 }
 
 
@@ -822,10 +925,7 @@
 }
 
 
-/* ── Step 1 action — single full-width button on mobile ─────────── */
-
-
-/* On desktop (.vf-actions without -between) align right, auto width */
+/* ── Step 1 actions — single full-width on mobile, right-aligned on desktop */
 
 @media (min-width: 480px) {
     .vf-actions:not(.vf-actions-between) {
@@ -839,14 +939,13 @@
 }
 
 
-/* ── Step 2 action — Back (ghost) + Submit (green) ──────────────── */
+/* ── Step 2 actions — stacked on mobile (submit on top), row on desktop */
 
 
-/* On mobile: stacked, Submit on top (visual priority), Back below   */
+/* On mobile: column-reverse so Submit appears above Back visually */
 
 .vf-actions-between {
     flex-direction: column-reverse;
-    /* Submit first on mobile */
     align-items: stretch;
 }
 
@@ -856,13 +955,11 @@
         align-items: center;
         justify-content: space-between;
     }
-    /* Ghost back button — compact, auto width */
     .vf-actions-between .vf-btn-ghost {
         width: auto;
         min-width: 100px;
         flex-shrink: 0;
     }
-    /* Submit button — takes remaining space but caps at natural size */
     .vf-actions-between .vf-btn-success,
     .vf-actions-between .vf-btn-primary {
         width: auto;
@@ -922,26 +1019,17 @@
 
 /* ── Bootstrap Compatibility Overrides ─────────────────────────── */
 
-.tab-content {
-    overflow: visible !important;
-}
-
+.tab-content,
 #profiling,
-#verification {
-    overflow: visible !important;
-}
-
+#verification,
 #profilingForm,
-#verificationForm {
-    overflow: visible !important;
-}
-
+#verificationForm,
 .vf-card .card {
     overflow: visible !important;
 }
 
 
-/* Keep Bootstrap validation feedback visible */
+/* Bootstrap validation feedback — keep working alongside our custom styles */
 
 .invalid-feedback {
     display: none;
@@ -964,7 +1052,6 @@
     .vf-selfie-row {
         grid-template-columns: 1fr;
     }
-    /* Selfie guide expands to its own row */
     .vf-selfie-guide ul {
         flex-direction: column;
         gap: 0.3rem;

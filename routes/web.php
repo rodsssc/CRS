@@ -13,7 +13,7 @@ use App\Http\Controllers\admin\report\ReportController;
 use App\Http\Controllers\client\booking\bookingController as clientBookingController;
 use App\Http\Controllers\client\car\carController as clientCarController;
 use App\Http\Controllers\client\profile\clientProfileController;
-use App\Http\Controllers\client\verification\verificationController as clientVerificationController;
+use App\Http\Controllers\client\verification\clientVerificationController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -46,23 +46,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/home', fn () => view('client.home'))->name('home');
 
-        Route::prefix('verification')->name('verification.')->group(function () {
-        // Verification routes
-        Route::get('/',[clientVerificationController::class, 'index']) ->name('index');
-        Route::post('/submit', [clientVerificationController::class, 'store']);  // Changed from '/verification' to '/submit'
-        
         // Profile routes (profiling)
-        Route::get('/profile/{id}',[clientProfileController::class, 'show'])      ->name('profile.show');
-        Route::post('/profile',[clientProfileController::class, 'store'])     ->name('profile.store');
-        Route::put('/profile/{id}',[clientProfileController::class, 'update'])    ->name('profile.update');
+        Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [clientProfileController::class, 'index'])->name('index');
+        Route::get('/{id}/show', [clientProfileController::class, 'show'])->name('show');
+        Route::post('/', [clientProfileController::class, 'store'])->name('store');
     });
+
+        Route::prefix('verification')->name('verification.')->group(function () {
+            
+            Route::get('/', [clientVerificationController::class, 'index'])->name('index');
+            Route::post('/', [clientVerificationController::class, 'store'])->name('store');  // Changed to '/' instead of '/submit'
+        });
+    
 
         Route::middleware('verified.client')->group(function () {
 
             Route::prefix('bookings')->name('bookings.')->group(function () {
-                Route::get('/',                   [clientBookingController::class, 'index'])       ->name('index');
-                Route::get('/data',               [clientBookingController::class, 'list'])        ->name('data');
-                Route::post('/',                  [clientBookingController::class, 'store'])       ->name('store');
+                Route::get('/',[clientBookingController::class, 'index'])       ->name('index');
+                Route::get('/data',[clientBookingController::class, 'list'])        ->name('data');
+                Route::post('/',[clientBookingController::class, 'store'])       ->name('store');
                 Route::get('/{booking}/payment',  [clientBookingController::class, 'payment'])     ->name('payment');
                 Route::post('/{booking}/payment', [clientBookingController::class, 'storePayment'])->name('payment.store');
             });

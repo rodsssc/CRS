@@ -51,7 +51,7 @@ class RedirectUnverifiedUsers
         if (!$user->hasVerifiedIdentity()) {
             // If not verified and trying to access protected routes
             if ($request->routeIs('client.*') && !in_array($request->route()?->getName(), $skipRoutes)) {
-                return redirect()->route('client.verification.index')
+                return redirect()->route('client.profile.index')
                     ->with('warning', 'Please complete your identity verification to proceed.');
             }
         }

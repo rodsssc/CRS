@@ -21,15 +21,12 @@ class VerificationController extends Controller
     public function index(Request $request): \Illuminate\View\View
     {
         $search  = trim((string) $request->query('q', ''));
-        $q       = $search; // keep backward compatible name used in Blade
+        $q       = $search;
         $status  = $request->query('status');
         $perPage = (int) $request->query('per_page', 10);
         $perPage = max(5, min(100, $perPage));
 
-        // ── Base query ───────────────────────────────────────────────────────────
-        // Avoid join-based ordering to keep pagination COUNT queries stable at
-        // scale (the join + correlated latest-verification lookup can cause
-        // heavy SQL / inflated result counts).
+        // ── Base query ───────────────────────────────────────────────────────
         $query = Client_profile::with('user.latestVerification')
             ->orderByRaw(
                 "COALESCE((
@@ -84,6 +81,10 @@ class VerificationController extends Controller
 
     // =========================================================================
     // SHOW — Return client verification details as JSON (used by view modal)
+    //
+    // FIX #3 — ID image paths return null when not uploaded.
+    //           The frontend JS checks for a non-empty value and shows the
+    //           server-side placeholder <div> instead of hitting an external URL.
     // =========================================================================
 
     public function show(int $id): JsonResponse
@@ -93,6 +94,20 @@ class VerificationController extends Controller
 
         $profile      = $user->clientProfile;
         $verification = $user->latestVerification;
+
+        // ── Build image URLs — null when path is absent ───────────────────────
+        // JS will render a local placeholder <div> when these are null/empty.
+        $idFrontImage = $verification?->id_front_image_path
+            ? asset('storage/' . $verification->id_front_image_path)
+            : null;
+
+        $idBackImage = $verification?->id_back_image_path
+            ? asset('storage/' . $verification->id_back_image_path)
+            : null;
+
+        $selfieImage = $verification?->selfie_with_id_image_path
+            ? asset('storage/' . $verification->selfie_with_id_image_path)
+            : null;
 
         return response()->json([
             'success' => true,
@@ -118,16 +133,9 @@ class VerificationController extends Controller
                 'id_type'   => $verification->formatted_id_type ?? '—',
                 'id_number' => $verification->id_number         ?? '—',
 
-                // ID images — fallback to placeholder if not uploaded
-                'id_front_image' => $verification?->id_front_image_path
-                                        ? asset('storage/' . $verification->id_front_image_path)
-                                        : 'https://via.placeholder.com/500x300?text=ID+Front',
-                'id_back_image'  => $verification?->id_back_image_path
-                                        ? asset('storage/' . $verification->id_back_image_path)
-                                        : 'https://via.placeholder.com/500x300?text=ID+Back',
-                'selfie_image'   => $verification?->selfie_with_id_image_path
-                                        ? asset('storage/' . $verification->selfie_with_id_image_path)
-                                        : 'https://via.placeholder.com/500x300?text=Selfie+with+ID',
+                // ID images — null when not uploaded; JS handles the empty state
+                'id_front_image' => $idFrontImage,
+               
 
                 // Status and timestamps
                 'status'           => $verification->status ?? 'none',
@@ -152,7 +160,6 @@ class VerificationController extends Controller
         try {
             $verification = Client_verification::findOrFail($id);
 
-            // Guard: skip if already approved
             if ($verification->status === 'approved') {
                 return response()->json([
                     'success' => false,
@@ -206,7 +213,6 @@ class VerificationController extends Controller
 
             $verification = Client_verification::findOrFail($id);
 
-            // Guard: cannot reject an already approved verification
             if ($verification->status === 'approved') {
                 return response()->json([
                     'success' => false,
@@ -214,7 +220,6 @@ class VerificationController extends Controller
                 ], 400);
             }
 
-            // Guard: skip if already rejected
             if ($verification->status === 'rejected') {
                 return response()->json([
                     'success' => false,
@@ -267,11 +272,14 @@ class VerificationController extends Controller
         }
     }
 
-    public function pendingCount(): \Illuminate\Http\JsonResponse
-{
-    $count = \App\Models\Client_verification::where('status', 'pending')->count();
- 
-    return response()->json(['count' => $count]);
-}
- 
+    // =========================================================================
+    // PENDING COUNT — Used for sidebar badge (polling-friendly lightweight endpoint)
+    // =========================================================================
+
+    public function pendingCount(): JsonResponse
+    {
+        $count = Client_verification::where('status', 'pending')->count();
+
+        return response()->json(['count' => $count]);
+    }
 }
